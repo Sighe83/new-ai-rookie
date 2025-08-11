@@ -1,26 +1,87 @@
 @import "tailwindcss";
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/500.css";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Hygge Design System Colors */
+  --color-primary: #4A55A2;
+  --color-primary-hover: #3A4480;
+  
+  --color-secondary: #F5EFE6;
+  --color-secondary-hover: #E8E0D5;
+  --color-secondary-text: #57534E;
+  
+  --color-accent: #A27B5C;
+  --color-accent-text: #44403C;
+  
+  --color-success-bg: #F0FDF4;
+  --color-success-text: #166534;
+  
+  --color-warning-bg: #FEFCE8;
+  --color-warning-text: #854D0E;
+  
+  --color-error: #DC2626;
+  --color-error-bg: #FEF2F2;
+  --color-error-text: #991B1B;
+  
+  --color-surface: #FBF9F6;
+  --color-base: #FFFFFF;
+  --color-border: #E7E5E4;
+  
+  --color-text: #44403C;
+  --color-text-light: #57534E;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Nunito", var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  
+  /* Primary Colors */
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  
+  /* Secondary Colors */
+  --color-secondary: var(--color-secondary);
+  --color-secondary-hover: var(--color-secondary-hover);
+  --color-secondary-text: var(--color-secondary-text);
+  
+  /* Accent Colors */
+  --color-accent: var(--color-accent);
+  --color-accent-text: var(--color-accent-text);
+  
+  /* Status Colors */
+  --color-success-bg: var(--color-success-bg);
+  --color-success-text: var(--color-success-text);
+  --color-warning-bg: var(--color-warning-bg);
+  --color-warning-text: var(--color-warning-text);
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+  --color-error-text: var(--color-error-text);
+  
+  /* Surface Colors */
+  --color-surface: var(--color-surface);
+  --color-base: var(--color-base);
+  --color-border: var(--color-border);
+  
+  /* Text Colors */
+  --color-text: var(--color-text);
+  --color-text-light: var(--color-text-light);
+  
+  /* Border Radius */
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* Box Shadow */
+  --shadow-soft: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-surface);
+  color: var(--color-text-light);
+  font-family: "Nunito", system-ui, sans-serif;
 }

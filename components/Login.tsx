@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui'
 
 interface LoginProps {
   onSignupClick: () => void
@@ -34,70 +35,60 @@ export default function Login({ onSignupClick }: LoginProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 border border-gray-200 dark:border-gray-700">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Sign in to your account</p>
-        </div>
+      <Card className="p-8">
+        <CardHeader className="text-center p-0 mb-8">
+          <CardTitle className="text-3xl">Welcome Back</CardTitle>
+          <CardDescription className="mt-2">Sign in to your account</CardDescription>
+        </CardHeader>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email
-            </label>
-            <input
-              id="email"
+        <CardContent className="p-0">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <Input
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               placeholder="Enter your email"
               required
             />
-          </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Password
-            </label>
-            <input
-              id="password"
+            <Input
+              label="Password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
               placeholder="Enter your password"
               required
             />
-          </div>
 
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-            </div>
-          )}
+            {error && (
+              <div className="bg-error-bg border border-red-300 rounded-xl p-4">
+                <p className="text-error-text text-sm">{error}</p>
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-xl transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full"
+            >
+              Sign In
+            </Button>
+          </form>
+        </CardContent>
 
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
+        <CardFooter className="text-center p-0 pt-8">
+          <p className="text-text-light">
             New AI Rookie?{' '}
             <button
               onClick={onSignupClick}
-              className="text-blue-600 hover:text-blue-500 font-semibold transition-colors"
+              className="text-primary hover:text-primary-hover font-bold transition-colors"
             >
               Create account
             </button>
           </p>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   )
 }
