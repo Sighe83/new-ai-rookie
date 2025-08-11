@@ -1,9 +1,12 @@
-import { ButtonHTMLAttributes, forwardRef } from 'react'
-import { cn } from '@/lib/utils'
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'destructive'
-  size?: 'sm' | 'md' | 'lg'
+import type { ButtonHTMLAttributes } from 'react'
+import { forwardRef } from 'react'
+import { cn } from '@/lib/utils'
+import type { ButtonVariant, Size, BaseComponentProps } from '@/types/design-system'
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, BaseComponentProps {
+  variant?: ButtonVariant
+  size?: Size
   loading?: boolean
 }
 

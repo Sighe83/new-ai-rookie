@@ -5,6 +5,7 @@
 @import "@fontsource/nunito/700.css";
 @import "@fontsource/nunito/800.css";
 
+/* Light theme */
 :root {
   /* Hygge Design System Colors */
   --color-primary: #4A55A2;
@@ -33,6 +34,30 @@
   
   --color-text: #44403C;
   --color-text-light: #57534E;
+
+}
+
+/* Dark theme overrides */
+.dark {
+  --color-primary: #A2B4FF;
+  --color-primary-hover: #6C7AC9;
+  --color-secondary: #23272F;
+  --color-secondary-hover: #1A1D23;
+  --color-secondary-text: #E5E7EB;
+  --color-accent: #FFD580;
+  --color-accent-text: #23272F;
+  --color-success-bg: #052E16;
+  --color-success-text: #A7F3D0;
+  --color-warning-bg: #78350F;
+  --color-warning-text: #FDE68A;
+  --color-error: #F87171;
+  --color-error-bg: #7F1D1D;
+  --color-error-text: #FCA5A5;
+  --color-surface: #18181B;
+  --color-base: #23272F;
+  --color-border: #27272A;
+  --color-text: #E5E7EB;
+  --color-text-light: #A1A1AA;
 }
 
 @theme inline {

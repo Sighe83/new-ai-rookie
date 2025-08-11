@@ -1,23 +1,20 @@
-
-import type { InputHTMLAttributes } from 'react'
-import { forwardRef } from 'react'
+import { forwardRef, SelectHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 import type { BaseComponentProps } from '@/types/design-system'
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement>, BaseComponentProps {
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement>, BaseComponentProps {
   label?: string
   error?: string
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, ...props }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
-    
+const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, label, error, id, children, ...props }, ref) => {
+    const selectId = id || label?.toLowerCase().replace(/\s+/g, '-')
     return (
       <div className="space-y-1">
         {label && (
-          <label 
-            htmlFor={inputId} 
+          <label
+            htmlFor={selectId}
             className={cn(
               'block text-sm font-bold mb-1',
               error ? 'text-error-text' : 'text-text-light'
@@ -26,18 +23,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
         )}
-        <input
-          id={inputId}
+        <select
+          id={selectId}
+          ref={ref}
           className={cn(
             'w-full px-4 py-3 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
-            error 
-              ? 'bg-error-bg border border-red-300 text-error-text placeholder:text-red-500/70 focus:ring-error focus:border-error' 
+            error
+              ? 'bg-error-bg border border-red-300 text-error-text placeholder:text-red-500/70 focus:ring-error focus:border-error'
               : 'bg-surface border border-border text-text',
             className
           )}
-          ref={ref}
+          aria-invalid={!!error}
           {...props}
-        />
+        >
+          {children}
+        </select>
         {error && (
           <p className="text-error-text text-sm mt-1">{error}</p>
         )}
@@ -46,6 +46,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 )
 
-Input.displayName = 'Input'
+Select.displayName = 'Select'
 
-export { Input }
+export { Select }

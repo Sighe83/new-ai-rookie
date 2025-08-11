@@ -1,8 +1,11 @@
-import { HTMLAttributes, forwardRef } from 'react'
-import { cn } from '@/lib/utils'
 
-export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'success' | 'warning' | 'neutral'
+import type { HTMLAttributes } from 'react'
+import { forwardRef } from 'react'
+import { cn } from '@/lib/utils'
+import type { BadgeVariant, BaseComponentProps } from '@/types/design-system'
+
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement>, BaseComponentProps {
+  variant?: BadgeVariant
 }
 
 const Badge = forwardRef<HTMLSpanElement, BadgeProps>(

@@ -2,6 +2,7 @@
 export type ColorVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error'
 export type Size = 'sm' | 'md' | 'lg'
 export type ButtonVariant = 'primary' | 'secondary' | 'destructive'
+export type AlertVariant = 'success' | 'warning' | 'error' | 'info'
 export type BadgeVariant = 'success' | 'warning' | 'neutral'
 
 // Theme tokens
