@@ -17,11 +17,45 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
-        const role = user.user_metadata?.role
-        if (role === 'AI_ROOKIE') {
-          router.push('/dashboard/learner')
-        } else if (role === 'AI_EXPERT') {
-          router.push('/dashboard/expert')
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single()
+          
+          if (!profileError && profileData?.role) {
+            // Use database role for routing
+            switch (profileData.role) {
+              case 'admin':
+                router.push('/admin')
+                break
+              case 'expert':
+                router.push('/dashboard/expert')
+                break
+              case 'learner':
+              default:
+                router.push('/dashboard/learner')
+                break
+            }
+          } else {
+            // Fallback to user metadata if profile doesn't exist
+            const role = user.user_metadata?.role
+            if (role === 'AI_EXPERT' || role === 'expert') {
+              router.push('/dashboard/expert')
+            } else {
+              router.push('/dashboard/learner')
+            }
+          }
+        } catch (error) {
+          console.error('Error checking user profile:', error)
+          // Final fallback to user metadata
+          const role = user.user_metadata?.role
+          if (role === 'AI_EXPERT' || role === 'expert') {
+            router.push('/dashboard/expert')
+          } else {
+            router.push('/dashboard/learner')
+          }
         }
       }
       
@@ -32,11 +66,45 @@ export default function Home() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const role = session.user.user_metadata?.role
-        if (role === 'AI_ROOKIE') {
-          router.push('/dashboard/learner')
-        } else if (role === 'AI_EXPERT') {
-          router.push('/dashboard/expert')
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single()
+          
+          if (!profileError && profileData?.role) {
+            // Use database role for routing
+            switch (profileData.role) {
+              case 'admin':
+                router.push('/admin')
+                break
+              case 'expert':
+                router.push('/dashboard/expert')
+                break
+              case 'learner':
+              default:
+                router.push('/dashboard/learner')
+                break
+            }
+          } else {
+            // Fallback to user metadata if profile doesn't exist
+            const role = session.user.user_metadata?.role
+            if (role === 'AI_EXPERT' || role === 'expert') {
+              router.push('/dashboard/expert')
+            } else {
+              router.push('/dashboard/learner')
+            }
+          }
+        } catch (error) {
+          console.error('Error checking user profile:', error)
+          // Final fallback to user metadata
+          const role = session.user.user_metadata?.role
+          if (role === 'AI_EXPERT' || role === 'expert') {
+            router.push('/dashboard/expert')
+          } else {
+            router.push('/dashboard/learner')
+          }
         }
       }
     })

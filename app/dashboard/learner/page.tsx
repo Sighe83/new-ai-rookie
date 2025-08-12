@@ -50,14 +50,57 @@ export default function LearnerDashboard() {
         return
       }
 
-      if (user.user_metadata?.role !== 'AI_ROOKIE') {
-        router.push('/dashboard/expert')
-        return
-      }
+      try {
+        // Check database role first
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single()
+        
+        let userRole = 'learner' // default
+        
+        if (!profileError && profileData?.role) {
+          userRole = profileData.role
+        } else {
+          // Fallback to user metadata
+          const metaRole = user.user_metadata?.role
+          if (metaRole === 'AI_EXPERT' || metaRole === 'expert') {
+            userRole = 'expert'
+          } else if (metaRole === 'admin') {
+            userRole = 'admin'
+          }
+        }
+        
+        // If not learner, redirect to appropriate dashboard
+        if (userRole !== 'learner') {
+          if (userRole === 'admin') {
+            router.push('/admin')
+          } else {
+            router.push('/dashboard/expert')
+          }
+          return
+        }
 
-      setUser(user)
-      await loadDashboardData(user.id)
-      setLoading(false)
+        setUser(user)
+        await loadDashboardData(user.id)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error checking user role:', error)
+        // Fallback to metadata check
+        const metaRole = user.user_metadata?.role
+        if (metaRole === 'AI_EXPERT' || metaRole === 'expert') {
+          router.push('/dashboard/expert')
+          return
+        } else if (metaRole === 'admin') {
+          router.push('/admin')
+          return
+        }
+        
+        setUser(user)
+        await loadDashboardData(user.id)
+        setLoading(false)
+      }
     }
 
     getUser()
