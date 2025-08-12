@@ -71,6 +71,11 @@ export async function GET(
     }
 
     // Get existing bookings for this expert in the date range that would conflict
+    // For now, we'll assume no bookings exist since the bookings table isn't created yet
+    // TODO: Uncomment this when bookings table is implemented
+    const existingBookings: { start_at: string; end_at: string }[] = []
+    
+    /*
     const { data: existingBookings, error: bookingsError } = await supabase
       .from('bookings')
       .select('start_at, end_at')
@@ -83,6 +88,7 @@ export async function GET(
       console.error('Error fetching existing bookings:', bookingsError)
       return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
     }
+    */
 
     // Generate time slots
     const timeSlots = []
@@ -121,7 +127,8 @@ export async function GET(
         const slotEnd = new Date(slotStart.getTime() + sessionDurationMs)
 
         // Check if this slot conflicts with existing bookings
-        const hasConflict = existingBookings?.some(booking => {
+        // Since existingBookings is empty for now, all slots are available
+        const hasConflict = existingBookings.some(booking => {
           const bookingStart = new Date(booking.start_at)
           const bookingEnd = new Date(booking.end_at)
           

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Button } from '@/components/ui'
 import { ExpertWithSessions, getExpertDisplayName } from '@/types/expert-browsing'
 import { ExpertSession, formatSessionPrice, calculateHourlyRate, SessionLevel } from '@/types/expert-sessions'
@@ -17,6 +18,7 @@ export function ExpertSessionCatalog({
   onBack, 
   onBookSession 
 }: ExpertSessionCatalogProps) {
+  const router = useRouter()
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
   
   const displayName = getExpertDisplayName(expert)
@@ -107,7 +109,10 @@ export function ExpertSessionCatalog({
             <Button 
               variant="primary"
               className="w-full"
-              onClick={() => onBookSession?.(session.id)}
+              onClick={() => {
+                onBookSession?.(session.id)
+                router.push(`/dashboard/learner/book/${session.id}`)
+              }}
             >
               Book This Session
             </Button>
