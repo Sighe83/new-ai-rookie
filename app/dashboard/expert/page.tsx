@@ -292,9 +292,7 @@ export default function ExpertDashboard() {
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard/expert" className="text-primary font-medium">Dashboard</a>
                 <a href="/dashboard/expert/sessions" className="text-text-light hover:text-text">My Sessions</a>
-                <a href="/earnings" className="text-text-light hover:text-text">Earnings</a>
                 <a href="/dashboard/expert/availability" className="text-text-light hover:text-text">Availability</a>
-                <a href="/profile" className="text-text-light hover:text-text">Profile</a>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -345,7 +343,7 @@ export default function ExpertDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-text-light mb-1">Total Coaching Sessions</p>
+                  <p className="text-sm text-text-light mb-1">Total Sessions</p>
                   <p className="text-2xl font-bold text-text">{stats?.total_sessions}</p>
                   <p className="text-xs text-primary mt-1">{stats?.sessions_this_month} recently</p>
                 </div>
@@ -396,7 +394,7 @@ export default function ExpertDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Your Next Coaching Session</CardTitle>
+                      <CardTitle>Your Next Session</CardTitle>
                       <CardDescription>
                         {formatDate(stats.next_session.scheduled_at)} • {stats.next_session.duration_minutes} minutes
                       </CardDescription>
@@ -540,38 +538,6 @@ export default function ExpertDashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="secondary" 
-                  className="w-full justify-start"
-                  onClick={() => router.push('/dashboard/expert/sessions')}
-                >
-                  <VideoIcon className="w-4 h-4 mr-2" />
-                  Manage Sessions
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  Mark Unavailable
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <DollarSignIcon className="w-4 h-4 mr-2" />
-                  Update Rates
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <UserIcon className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <StarIcon className="w-4 h-4 mr-2" />
-                  View Reviews
-                </Button>
-              </CardContent>
-            </Card>
 
           </div>
         </div>

@@ -253,9 +253,6 @@ export default function ExpertSessionsPage() {
     }
   }
 
-  const handleBackToDashboard = () => {
-    router.push('/dashboard/expert')
-  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -407,13 +404,8 @@ export default function ExpertSessionsPage() {
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-text">My Sessions</h1>
               <nav className="hidden md:flex space-x-6">
-                <button 
-                  onClick={handleBackToDashboard}
-                  className="text-text-light hover:text-text"
-                >
-                  Dashboard
-                </button>
-                <span className="text-primary font-medium">My Sessions</span>
+                <a href="/dashboard/expert" className="text-text-light hover:text-text">Dashboard</a>
+                <a href="/dashboard/expert/sessions" className="text-primary font-medium">My Sessions</a>
                 <a href="/dashboard/expert/availability" className="text-text-light hover:text-text">Availability</a>
               </nav>
             </div>

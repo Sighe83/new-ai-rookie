@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui'
+import { Button, Input, Badge } from '@/components/ui'
 
 interface SignupProps {
   onBackToLogin: () => void
@@ -58,99 +58,110 @@ export default function Signup({ onBackToLogin }: SignupProps) {
 
   if (success) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <Card className="p-8 text-center">
-          <div className="w-16 h-16 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-success-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <CardTitle className="mb-2">Check Your Email</CardTitle>
-          <CardDescription className="mb-6">
-            We&apos;ve sent you a confirmation link at <span className="font-bold">{email}</span>
-          </CardDescription>
-          <button
-            onClick={onBackToLogin}
-            className="text-primary hover:text-primary-hover font-bold transition-colors"
-          >
-            Back to login
-          </button>
-        </Card>
+      <div className="text-center">
+        <div className="w-16 h-16 bg-success-bg rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-success-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-text mb-2">Check Your Email</h2>
+        <p className="text-text-light mb-6">
+          We&apos;ve sent a confirmation link to
+          <span className="block font-semibold text-text mt-1">{email}</span>
+        </p>
+        <Button
+          variant="secondary"
+          onClick={onBackToLogin}
+          className="w-full"
+        >
+          Back to Login
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="p-8">
-        <CardHeader className="text-center p-0 mb-8">
-          <CardTitle className="text-3xl">Join as AI Rookie</CardTitle>
-          <CardDescription className="mt-2">Start your AI learning journey</CardDescription>
-        </CardHeader>
+    <div>
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold text-text">Join AI Rookie</h2>
+        <p className="text-text-light mt-2">
+          Start your personalized AI learning journey
+        </p>
+      </div>
 
-        <CardContent className="p-0">
-          <form onSubmit={handleSignup} className="space-y-6">
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+      <form onSubmit={handleSignup} className="space-y-4">
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
 
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Create a password"
-              required
-            />
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Create a password (min. 6 characters)"
+          required
+        />
 
-            <Input
-              label="Confirm Password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your password"
-              required
-            />
+        <Input
+          label="Confirm Password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm your password"
+          required
+        />
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-blue-800 text-sm">
-                <strong>AI Rookie Account:</strong> Perfect for beginners starting their AI journey. Get access to learning resources and beginner-friendly tools.
+        <div className="bg-secondary/50 border border-primary/10 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Badge variant="primary" className="mt-0.5">Learner</Badge>
+            <div className="flex-1">
+              <p className="text-text text-sm font-medium mb-1">AI Rookie Account</p>
+              <p className="text-text-light text-sm">
+                Perfect for beginners starting their AI journey. Get access to expert sessions and learning resources.
               </p>
             </div>
+          </div>
+        </div>
 
-            {error && (
-              <div className="bg-error-bg border border-red-300 rounded-xl p-4">
-                <p className="text-error-text text-sm">{error}</p>
-              </div>
-            )}
+        {error && (
+          <div className="bg-error-bg border border-error/20 rounded-lg p-3">
+            <p className="text-error-text text-sm">{error}</p>
+          </div>
+        )}
 
-            <Button
-              type="submit"
-              loading={loading}
-              className="w-full"
-            >
-              Create Account
-            </Button>
-          </form>
-        </CardContent>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          className="w-full"
+        >
+          Create Account
+        </Button>
 
-        <CardFooter className="text-center p-0 pt-8">
-          <p className="text-text-light">
-            Already have an account?{' '}
-            <button
-              onClick={onBackToLogin}
-              className="text-primary hover:text-primary-hover font-bold transition-colors"
-            >
-              Sign in
-            </button>
-          </p>
-        </CardFooter>
-      </Card>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-base text-text-light">Already have an account?</span>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onBackToLogin}
+          className="w-full"
+        >
+          Sign In
+        </Button>
+      </form>
     </div>
   )
 }

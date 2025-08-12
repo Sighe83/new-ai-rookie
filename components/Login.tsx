@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui'
+import { Button, Input } from '@/components/ui'
 
 interface LoginProps {
   onSignupClick: () => void
@@ -58,61 +58,66 @@ export default function Login({ onSignupClick }: LoginProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="p-8">
-        <CardHeader className="text-center p-0 mb-8">
-          <CardTitle className="text-3xl">Welcome Back</CardTitle>
-          <CardDescription className="mt-2">Sign in to your account</CardDescription>
-        </CardHeader>
+    <div>
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold text-text">Welcome Back</h2>
+        <p className="text-text-light mt-2">
+          Sign in to continue your AI journey
+        </p>
+      </div>
 
-        <CardContent className="p-0">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
 
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          required
+        />
 
-            {error && (
-              <div className="bg-error-bg border border-red-300 rounded-xl p-4">
-                <p className="text-error-text text-sm">{error}</p>
-              </div>
-            )}
+        {error && (
+          <div className="bg-error-bg border border-error/20 rounded-lg p-3">
+            <p className="text-error-text text-sm">{error}</p>
+          </div>
+        )}
 
-            <Button
-              type="submit"
-              loading={loading}
-              className="w-full"
-            >
-              Sign In
-            </Button>
-          </form>
-        </CardContent>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={loading}
+          className="w-full"
+        >
+          Sign In
+        </Button>
 
-        <CardFooter className="text-center p-0 pt-8">
-          <p className="text-text-light">
-            New AI Rookie?{' '}
-            <button
-              onClick={onSignupClick}
-              className="text-primary hover:text-primary-hover font-bold transition-colors"
-            >
-              Create account
-            </button>
-          </p>
-        </CardFooter>
-      </Card>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-base text-text-light">New to AI Rookie?</span>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onSignupClick}
+          className="w-full"
+        >
+          Create Account
+        </Button>
+      </form>
     </div>
   )
 }

@@ -217,10 +217,8 @@ export default function ExpertAvailabilityPage() {
               <h1 className="text-xl font-bold text-text">AI Expert Hub</h1>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard/expert" className="text-text-light hover:text-text">Dashboard</a>
-                <a href="/sessions" className="text-text-light hover:text-text">Sessions</a>
-                <a href="/earnings" className="text-text-light hover:text-text">Earnings</a>
+                <a href="/dashboard/expert/sessions" className="text-text-light hover:text-text">My Sessions</a>
                 <a href="/dashboard/expert/availability" className="text-primary font-medium">Availability</a>
-                <a href="/profile" className="text-text-light hover:text-text">Profile</a>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
