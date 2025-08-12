@@ -11,6 +11,7 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement>, BaseCompone
 const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = 'neutral', ...props }, ref) => {
     const variants = {
+      primary: 'bg-primary text-base',
       success: 'bg-success-bg text-success-text',
       warning: 'bg-warning-bg text-warning-text',
       neutral: 'bg-gray-100 text-gray-600',

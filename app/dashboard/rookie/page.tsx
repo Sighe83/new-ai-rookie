@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, AppUser } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Button, Card } from '@/components/ui'
+import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Badge } from '@/components/ui'
 
 export default function RookieDashboard() {
   const [user, setUser] = useState<AppUser | null>(null)
@@ -38,34 +38,28 @@ export default function RookieDashboard() {
 
   if (loading) {
     return (
-  <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-surface)' }}>
-  <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }}></div>
-          <p style={{ color: 'var(--color-text-light)' }}>Loading your dashboard...</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-text-light">Loading your dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-  <div className="min-h-screen" style={{ background: 'var(--color-surface)' }}>
-  <header className="backdrop-blur-sm border-b sticky top-0 z-50" style={{ background: 'var(--color-base)', borderColor: 'var(--color-border)' }}>
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface">
+      <header className="bg-base border-b border-border sticky top-0 z-50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>AI Rookie Dashboard</h1>
-              </div>
+              <h1 className="text-xl font-bold text-text">AI Rookie Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm" style={{ color: 'var(--color-text-light)' }}>
+              <span className="text-sm text-text-light">
                 Welcome, {user?.email}
               </span>
-              <Button
-                onClick={handleSignOut}
-                variant="destructive"
-                size="sm"
-              >
+              <Button onClick={handleSignOut} variant="destructive" size="sm">
                 Sign Out
               </Button>
             </div>
@@ -73,72 +67,219 @@ export default function RookieDashboard() {
         </div>
       </header>
 
-  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
-            Welcome to your AI learning journey! 🚀
+          <h2 className="text-3xl font-bold text-text mb-2">
+            Your AI Coaching Journey 🚀
           </h2>
-          <p style={{ color: 'var(--color-text-light)' }}>
-            You&apos;re logged in as an AI Rookie. Here&apos;s your personalized learning dashboard.
+          <p className="text-text-light">
+            Connect with AI experts for personalized guidance and mentoring
           </p>
         </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: 'var(--color-primary)' }}>
-              <svg className="w-6 h-6" style={{ color: 'var(--color-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>Learning Resources</h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-light)' }}>
-              Access curated AI learning materials perfect for beginners.
-            </p>
-            <Button variant="primary" size="sm" className="font-bold" onClick={() => {/* TODO: add handler */}}>
-              Explore Resources →
-            </Button>
-          </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your Next Session</CardTitle>
+                    <CardDescription>Upcoming coaching conversation</CardDescription>
+                  </div>
+                  <Badge variant="success">Confirmed</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-base font-bold text-white">DS</span>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-text">Dr. Sarah Chen</h4>
+                        <p className="text-sm text-text-light">Your AI Coach</p>
+                        <p className="text-sm text-accent font-medium">Tomorrow, 2:00 PM (60 min)</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4 p-3 bg-base rounded-lg">
+                    <h5 className="text-sm font-semibold text-text mb-2">Session 4: Next Steps Discussion</h5>
+                    <p className="text-sm text-text-light">
+                      Follow up on neural network concepts from last session. Discuss your project ideas and plan next learning steps.
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <Button size="sm" variant="primary">Join Session</Button>
+                    <Button size="sm" variant="secondary">Add to Calendar</Button>
+                  </div>
+                </div>
 
-          <Card className="p-6">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: 'var(--color-success-bg)' }}>
-              <svg className="w-6 h-6" style={{ color: 'var(--color-success-text)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>Progress Tracking</h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-light)' }}>
-              Monitor your learning progress and achievements.
-            </p>
-            <Button variant="primary" size="sm" className="font-bold" onClick={() => {/* TODO: add handler */}}>
-              View Progress →
-            </Button>
-          </Card>
+                <div className="p-3 bg-surface/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-text">Need to reschedule?</p>
+                      <p className="text-xs text-text-light">Free changes up to 24h before session</p>
+                    </div>
+                    <Button size="sm" variant="secondary">Reschedule</Button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="primary" className="w-full">View All Sessions</Button>
+              </CardFooter>
+            </Card>
 
-          <Card className="p-6">
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: 'var(--color-accent)' }}>
-              <svg className="w-6 h-6" style={{ color: 'var(--color-accent)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>Community</h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--color-text-light)' }}>
-              Connect with other AI Rookies and get support.
-            </p>
-            <Button variant="primary" size="sm" className="font-bold" onClick={() => {/* TODO: add handler */}}>
-              Join Community →
-            </Button>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Your AI Coaching Relationship</CardTitle>
+                <CardDescription>Building expertise through personalized mentoring</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-accent/5 border border-accent/20 rounded-lg">
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-base font-bold text-white">DS</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-text">Dr. Sarah Chen</h4>
+                      <p className="text-sm text-text-light">Your AI Coach • 3 sessions completed</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <div className="flex space-x-1">
+                          {[1,2,3,4,5].map(star => (
+                            <span key={star} className="text-warning-text">⭐</span>
+                          ))}
+                        </div>
+                        <span className="text-xs text-text-light">(5.0 rating)</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-accent">$75/session</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4 p-3 bg-base rounded-lg">
+                    <h5 className="text-sm font-semibold text-text mb-1">Coaching Focus Areas</h5>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Badge variant="primary">Neural Networks</Badge>
+                      <Badge variant="neutral">Python</Badge>
+                      <Badge variant="neutral">Computer Vision</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button size="sm" variant="primary" className="flex-1">Schedule Next Session</Button>
+                    <Button size="sm" variant="secondary">View Profile</Button>
+                  </div>
+                </div>
+
+                <div className="text-center p-4 border border-border rounded-lg">
+                  <p className="text-sm text-text-light mb-3">
+                    Need a different coaching style or expertise area?
+                  </p>
+                  <Button size="sm" variant="secondary">Find New Coach</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Coaching Journey</CardTitle>
+                <CardDescription>Your personal growth in AI</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-4 bg-primary/5 rounded-lg">
+                  <div className="text-2xl font-bold text-primary">3</div>
+                  <p className="text-sm text-text-light">Sessions with Dr. Chen</p>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text">Total Coaching Hours</span>
+                    <Badge variant="primary">4.5h</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text">Started Coaching</span>
+                    <span className="text-sm text-text-light">Oct 15, 2024</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-text">Next Milestone</span>
+                    <Badge variant="success">First Project</Badge>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-accent/5 rounded-lg">
+                  <h5 className="text-sm font-semibold text-text mb-2">Current Focus</h5>
+                  <p className="text-sm text-text-light">
+                    Building foundation in neural networks and preparing for your first hands-on project.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Session Notes & Insights</CardTitle>
+                <CardDescription>Key takeaways from your coaching</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-3 bg-success-bg/10 border border-success-bg rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-success-text rounded-full mt-2"></div>
+                    <div className="text-sm flex-1">
+                      <p className="text-text font-medium">Session 3 Key Insight</p>
+                      <p className="text-text-light text-xs mb-1">Dec 8, 2024 • Dr. Chen</p>
+                      <p className="text-text-light">
+                        Focus on understanding the math behind backpropagation before moving to complex architectures.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                    <div className="text-sm flex-1">
+                      <p className="text-text font-medium">Next Session Planned</p>
+                      <p className="text-text-light text-xs mb-1">Scheduled for Dec 10</p>
+                      <p className="text-text-light">
+                        Will work through a practical example of building your first neural network.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-accent/5 border border-accent/20 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-accent rounded-full mt-2"></div>
+                    <div className="text-sm flex-1">
+                      <p className="text-text font-medium">Homework Progress</p>
+                      <p className="text-text-light text-xs mb-1">Due before next session</p>
+                      <p className="text-text-light">
+                        Read Chapter 3 of suggested book and practice Python exercises.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-primary">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="primary" className="w-full">Schedule Next Session</Button>
+                <Button variant="secondary" className="w-full">Message Your Coach</Button>
+                <Button variant="secondary" className="w-full">Review Session Notes</Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
-        <Card className="mt-8 p-6 border-0" style={{ background: 'var(--color-primary)', color: 'var(--color-base)' }}>
-          <h3 className="text-xl font-bold mb-2">Ready to level up?</h3>
-          <p className="mb-4 opacity-90">
-            Once you&apos;ve mastered the basics, you can upgrade to AI Expert for advanced features and tools.
-          </p>
-          <Button style={{ background: 'var(--color-base)', color: 'var(--color-primary)' }}>
-            Learn More
-          </Button>
-        </Card>
       </main>
     </div>
   )
