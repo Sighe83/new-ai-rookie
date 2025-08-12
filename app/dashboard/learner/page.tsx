@@ -220,8 +220,8 @@ export default function LearnerDashboard() {
               <h1 className="text-xl font-bold text-text">AI Rookie</h1>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard/learner" className="text-primary font-medium">Dashboard</a>
-                <a href="/experts" className="text-text-light hover:text-text">Find Experts</a>
-                <a href="/sessions" className="text-text-light hover:text-text">My Sessions</a>
+                <a href="/dashboard/learner/experts" className="text-text-light hover:text-text">Find Experts</a>
+                <a href="/dashboard/learner/bookings" className="text-text-light hover:text-text">My Bookings</a>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -412,7 +412,11 @@ export default function LearnerDashboard() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="secondary" className="w-full justify-start">
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start"
+                  onClick={() => router.push('/dashboard/learner/experts')}
+                >
                   <UserIcon className="w-4 h-4 mr-2" />
                   Find Your AI Coach
                 </Button>
