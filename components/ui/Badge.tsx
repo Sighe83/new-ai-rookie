@@ -15,6 +15,7 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       success: 'bg-success-bg text-success-text',
       warning: 'bg-warning-bg text-warning-text',
       neutral: 'bg-gray-100 text-gray-600',
+      destructive: 'bg-error-bg text-error-text',
     }
 
     return (
