@@ -4,10 +4,52 @@ import { useState, useEffect } from 'react'
 import { supabase, AppUser } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Badge } from '@/components/ui'
+import { CalendarIcon, UserIcon, TrendingUpIcon, DollarSignIcon, VideoIcon, MessageSquareIcon, StarIcon, CalendarDaysIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react'
+
+interface Session {
+  id: string
+  expert_id: string
+  learner_id: string
+  scheduled_at: string
+  duration_minutes: number
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+  price: number
+  meeting_url?: string
+  notes?: string
+  learner: {
+    id: string
+    full_name: string
+    email: string
+    sessions_completed: number
+  }
+}
+
+interface ExpertStats {
+  total_earnings: number
+  pending_earnings: number
+  total_sessions: number
+  sessions_this_month: number
+  average_rating: number
+  total_reviews: number
+  completion_rate: number
+  next_session?: Session
+  upcoming_sessions: Session[]
+  pending_requests: Session[]
+}
+
+interface AvailabilitySlot {
+  id: string
+  day_of_week: number
+  start_time: string
+  end_time: string
+  is_active: boolean
+}
 
 export default function ExpertDashboard() {
   const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<ExpertStats | null>(null)
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -20,30 +62,139 @@ export default function ExpertDashboard() {
       }
 
       if (user.user_metadata?.role !== 'AI_EXPERT') {
-        router.push('/dashboard/rookie')
+        router.push('/dashboard/learner')
         return
       }
 
       setUser(user)
+      await loadDashboardData(user.id)
       setLoading(false)
     }
 
     getUser()
   }, [router])
 
+  const loadDashboardData = async (userId: string) => {
+    // Mock data representing expert statistics
+    const mockStats: ExpertStats = {
+      total_earnings: 8750,
+      pending_earnings: 625,
+      total_sessions: 72,
+      sessions_this_month: 8,
+      average_rating: 4.9,
+      total_reviews: 45,
+      completion_rate: 98,
+      next_session: {
+        id: '1',
+        expert_id: userId,
+        learner_id: 'learner-1',
+        scheduled_at: new Date(Date.now() + 7200000).toISOString(), // In 2 hours
+        duration_minutes: 60,
+        status: 'confirmed',
+        price: 125,
+        meeting_url: 'https://zoom.us/j/123456789',
+        notes: 'Continuing neural network implementation discussion',
+        learner: {
+          id: 'learner-1',
+          full_name: 'Alex Johnson',
+          email: 'alex@example.com',
+          sessions_completed: 5
+        }
+      },
+      upcoming_sessions: [
+        {
+          id: '2',
+          expert_id: userId,
+          learner_id: 'learner-2',
+          scheduled_at: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+          duration_minutes: 90,
+          status: 'confirmed',
+          price: 187.50,
+          learner: {
+            id: 'learner-2',
+            full_name: 'Maria Garcia',
+            email: 'maria@example.com',
+            sessions_completed: 12
+          }
+        },
+        {
+          id: '3',
+          expert_id: userId,
+          learner_id: 'learner-3',
+          scheduled_at: new Date(Date.now() + 172800000).toISOString(), // In 2 days
+          duration_minutes: 60,
+          status: 'confirmed',
+          price: 125,
+          learner: {
+            id: 'learner-3',
+            full_name: 'James Wilson',
+            email: 'james@example.com',
+            sessions_completed: 2
+          }
+        }
+      ],
+      pending_requests: [
+        {
+          id: '4',
+          expert_id: userId,
+          learner_id: 'learner-4',
+          scheduled_at: new Date(Date.now() + 259200000).toISOString(), // In 3 days
+          duration_minutes: 60,
+          status: 'pending',
+          price: 125,
+          learner: {
+            id: 'learner-4',
+            full_name: 'Emma Thompson',
+            email: 'emma@example.com',
+            sessions_completed: 0
+          }
+        }
+      ]
+    }
+
+    const mockAvailability: AvailabilitySlot[] = [
+      { id: '1', day_of_week: 1, start_time: '09:00', end_time: '12:00', is_active: true },
+      { id: '2', day_of_week: 1, start_time: '14:00', end_time: '17:00', is_active: true },
+      { id: '3', day_of_week: 3, start_time: '10:00', end_time: '13:00', is_active: true },
+      { id: '4', day_of_week: 3, start_time: '15:00', end_time: '18:00', is_active: true },
+      { id: '5', day_of_week: 5, start_time: '09:00', end_time: '12:00', is_active: true }
+    ]
+
+    setStats(mockStats)
+    setAvailability(mockAvailability)
+  }
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  const handleAcceptSession = (sessionId: string) => {
-    // TODO: Implement session acceptance logic
-    console.log('Accepting session:', sessionId)
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = date.getTime() - now.getTime()
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60))
+    
+    if (diffHours < 24) {
+      if (diffHours <= 1) return 'In 1 hour'
+      return `In ${diffHours} hours`
+    }
+    
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays <= 7) return `In ${diffDays} days`
+    
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  const handleDeclineSession = (sessionId: string) => {
-    // TODO: Implement session decline logic
-    console.log('Declining session:', sessionId)
+  const getDayName = (day: number) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return days[day]
   }
 
   if (loading) {
@@ -51,7 +202,7 @@ export default function ExpertDashboard() {
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-text-light">Loading your dashboard...</p>
+          <p className="text-text-light">Loading your expert dashboard...</p>
         </div>
       </div>
     )
@@ -59,15 +210,26 @@ export default function ExpertDashboard() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <header className="bg-base border-b border-border sticky top-0 z-50 backdrop-blur-sm">
+      <header className="bg-base border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-text">AI Expert Dashboard</h1>
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-bold text-text">AI Expert Hub</h1>
+              <nav className="hidden md:flex space-x-6">
+                <a href="/dashboard/expert" className="text-primary font-medium">Dashboard</a>
+                <a href="/sessions" className="text-text-light hover:text-text">Sessions</a>
+                <a href="/earnings" className="text-text-light hover:text-text">Earnings</a>
+                <a href="/availability" className="text-text-light hover:text-text">Availability</a>
+                <a href="/profile" className="text-text-light hover:text-text">Profile</a>
+              </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-text-light">
-                Welcome, {user?.email}
+              <Button variant="secondary" size="sm">
+                <MessageSquareIcon className="w-4 h-4 mr-2" />
+                Messages
+              </Button>
+              <span className="text-sm text-text-light hidden sm:block">
+                {user?.email}
               </span>
               <Button onClick={handleSignOut} variant="destructive" size="sm">
                 Sign Out
@@ -78,289 +240,321 @@ export default function ExpertDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text mb-2">
-            AI Coaching Hub ⚡
+            Expert Dashboard
           </h2>
           <p className="text-text-light">
-            Guide your students through personalized AI mentoring journeys
+            Manage your coaching sessions and track your impact
           </p>
         </div>
 
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-light mb-1">Total Earnings</p>
+                  <p className="text-2xl font-bold text-text">${stats?.total_earnings.toLocaleString()}</p>
+                  <p className="text-xs text-success-text mt-1">+${stats?.pending_earnings} pending</p>
+                </div>
+                <div className="w-12 h-12 bg-success-bg/10 rounded-xl flex items-center justify-center">
+                  <DollarSignIcon className="w-6 h-6 text-success-text" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-light mb-1">Total Sessions</p>
+                  <p className="text-2xl font-bold text-text">{stats?.total_sessions}</p>
+                  <p className="text-xs text-primary mt-1">{stats?.sessions_this_month} this month</p>
+                </div>
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <VideoIcon className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-light mb-1">Average Rating</p>
+                  <p className="text-2xl font-bold text-text">{stats?.average_rating}</p>
+                  <p className="text-xs text-text-light mt-1">from {stats?.total_reviews} reviews</p>
+                </div>
+                <div className="w-12 h-12 bg-warning-bg/10 rounded-xl flex items-center justify-center">
+                  <StarIcon className="w-6 h-6 text-warning-text" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-light mb-1">Completion Rate</p>
+                  <p className="text-2xl font-bold text-text">{stats?.completion_rate}%</p>
+                  <p className="text-xs text-accent mt-1">Excellent</p>
+                </div>
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                  <TrendingUpIcon className="w-6 h-6 text-accent" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Next Session */}
+            {stats?.next_session && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Next Session Starting Soon</CardTitle>
+                      <CardDescription>
+                        {formatDate(stats.next_session.scheduled_at)} • {stats.next_session.duration_minutes} minutes
+                      </CardDescription>
+                    </div>
+                    <Badge variant="success">Confirmed</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                      <UserIcon className="w-7 h-7 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-text">{stats.next_session.learner.full_name}</h4>
+                      <p className="text-sm text-text-light mb-2">
+                        {stats.next_session.learner.email} • Session #{stats.next_session.learner.sessions_completed + 1}
+                      </p>
+                      {stats.next_session.notes && (
+                        <div className="p-3 bg-base rounded-lg">
+                          <p className="text-sm text-text-light">{stats.next_session.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-semibold text-accent">${stats.next_session.price}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button variant="primary" className="flex-1">
+                      <VideoIcon className="w-4 h-4 mr-2" />
+                      Start Session
+                    </Button>
+                    <Button variant="secondary">
+                      <MessageSquareIcon className="w-4 h-4 mr-2" />
+                      Message Learner
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Upcoming Sessions */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>New Coaching Requests</CardTitle>
-                    <CardDescription>Students seeking personalized AI mentoring</CardDescription>
+                    <CardTitle>Upcoming Sessions</CardTitle>
+                    <CardDescription>Your confirmed coaching sessions</CardDescription>
                   </div>
-                  <Badge variant="warning">1 new</Badge>
+                  <Badge variant="primary">{stats?.upcoming_sessions.length} scheduled</Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 border border-warning-bg rounded-lg bg-warning-bg/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-                        <span className="text-base font-bold">LW</span>
+                {stats?.upcoming_sessions.map((session) => (
+                  <div key={session.id} className="p-4 bg-surface rounded-lg border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-text">{session.learner.full_name}</p>
+                          <p className="text-sm text-text-light">
+                            {formatDate(session.scheduled_at)} • {session.duration_minutes} min
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-text">Lisa Wong</h4>
-                        <p className="text-sm text-text-light">Seeking AI Career Guidance</p>
-                        <p className="text-sm text-accent font-medium">Looking for ongoing mentoring</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-accent">${session.price}</p>
+                        <Badge variant="success" className="mt-1">Confirmed</Badge>
                       </div>
                     </div>
-                    <Badge variant="warning">New Request</Badge>
-                  </div>
-                  
-                  <div className="mb-4 p-3 bg-base rounded-lg">
-                    <p className="text-sm text-text-light mb-2">
-&quot;Hi Dr. Chen! I&apos;m a software developer transitioning to AI. I&apos;d love a mentor to guide me through this journey. I&apos;m particularly interested in computer vision and have some Python background.&quot;
-                    </p>
-                    <div className="flex items-center space-x-4 text-xs text-text-light">
-                      <span>• 3 years Python experience</span>
-                      <span>• CS degree</span>
-                      <span>• Available evenings</span>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" className="flex-1">
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button size="sm" variant="secondary">
+                        <MessageSquareIcon className="w-4 h-4 mr-2" />
+                        Message
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="primary"
-                      onClick={() => handleAcceptSession('1')}
-                    >
-                      Accept as Student
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="secondary"
-                      onClick={() => handleDeclineSession('1')}
-                    >
-                      Send Message
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleDeclineSession('1')}
-                    >
-                      Decline
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="text-center p-4 bg-surface/50 rounded-lg">
-                  <p className="text-sm text-text-light">
-                    No other pending requests. Your coaching slots are currently full.
-                  </p>
-                </div>
+                ))}
               </CardContent>
               <CardFooter>
-                <Button variant="secondary" className="w-full">View All Requests</Button>
+                <Button variant="secondary" className="w-full">View All Sessions</Button>
               </CardFooter>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Sessions</CardTitle>
-                  <CardDescription>Your coaching schedule</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <h4 className="font-medium text-text">Sarah Anderson</h4>
-                        <p className="text-sm text-text-light">Session #4 • Tomorrow, 2:00 PM</p>
+            {/* Pending Requests */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Pending Requests</CardTitle>
+                    <CardDescription>Review and accept session requests</CardDescription>
+                  </div>
+                  <Badge variant="warning">{stats?.pending_requests.length} pending</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {stats?.pending_requests.map((request) => (
+                  <div key={request.id} className="p-4 bg-warning-bg/10 rounded-lg border border-warning-bg">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-warning-bg/20 rounded-lg flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 text-warning-text" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-text">{request.learner.full_name}</p>
+                          <p className="text-sm text-text-light">
+                            {formatDate(request.scheduled_at)} • {request.duration_minutes} min
+                          </p>
+                          <p className="text-xs text-warning-text mt-1">
+                            New learner • First session
+                          </p>
+                        </div>
                       </div>
-                      <Button size="sm" variant="primary">Start Session</Button>
-                    </div>
-                    <div className="text-xs text-text-light bg-base p-2 rounded">
-                      <strong>Focus:</strong> Neural network fundamentals & first project planning
-                    </div>
-                  </div>
-                  
-                  <div className="p-3 bg-surface rounded-lg border border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <h4 className="font-medium text-text">Marcus Johnson</h4>
-                        <p className="text-sm text-text-light">Session #2 • Thursday, 7:00 PM</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-accent">${request.price}</p>
                       </div>
-                      <Button variant="secondary" size="sm">View Notes</Button>
                     </div>
-                    <div className="text-xs text-text-light bg-base p-2 rounded">
-                      <strong>Focus:</strong> Career transition strategy & learning roadmap
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-surface/50 rounded-lg">
-                    <p className="text-sm text-text-light">
-                      Next available slot: Dec 15 • 3:00 PM
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Coaching Impact</CardTitle>
-                  <CardDescription>Your mentoring success</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center p-4 bg-primary/10 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">4.9</div>
-                    <p className="text-sm text-text-light">Student Satisfaction</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-text">7</div>
-                      <p className="text-xs text-text-light">Sessions This Month</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-text">$525</div>
-                      <p className="text-xs text-text-light">Monthly Earnings</p>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="primary" className="flex-1">
+                        <CheckCircleIcon className="w-4 h-4 mr-2" />
+                        Accept
+                      </Button>
+                      <Button size="sm" variant="destructive">
+                        <XCircleIcon className="w-4 h-4 mr-2" />
+                        Decline
+                      </Button>
+                      <Button size="sm" variant="secondary">
+                        View Profile
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="pt-2 border-t border-border">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-text-light">Active Students</span>
-                      <span className="text-text font-medium">3</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                ))}
+              </CardContent>
+            </Card>
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-6">
+            {/* Availability */}
             <Card>
               <CardHeader>
-                <CardTitle>Earnings Overview</CardTitle>
-                <CardDescription>Your coaching income</CardDescription>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Your Availability</CardTitle>
+                  <Button size="sm" variant="secondary">Edit</Button>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-accent/10 rounded-lg">
-                  <div className="text-3xl font-bold text-accent">$3,450</div>
-                  <p className="text-sm text-text-light">Total Earnings (6 months)</p>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">This Month</span>
-                    <span className="text-sm font-medium text-success-text">$525</span>
+              <CardContent className="space-y-3">
+                {availability.map((slot) => (
+                  <div key={slot.id} className="flex items-center justify-between p-3 bg-surface rounded-lg">
+                    <div>
+                      <p className="font-medium text-text text-sm">{getDayName(slot.day_of_week)}</p>
+                      <p className="text-xs text-text-light">
+                        {slot.start_time} - {slot.end_time}
+                      </p>
+                    </div>
+                    <Badge variant={slot.is_active ? 'success' : 'neutral'}>
+                      {slot.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Avg per Session</span>
-                    <span className="text-sm font-medium text-text">$75</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Next Payout</span>
-                    <span className="text-sm text-text-light">Dec 15</span>
-                  </div>
-                </div>
-                
-                <div className="p-3 bg-primary/5 rounded-lg">
-                  <p className="text-xs text-text-light mb-1">
-                    <strong>Steady Growth:</strong> +15% vs last month
-                  </p>
-                  <p className="text-xs text-text-light">
-                    Consistent coaching relationships driving stable income
-                  </p>
-                </div>
+                ))}
+                <Button variant="secondary" className="w-full mt-4">
+                  <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                  Manage Availability
+                </Button>
               </CardContent>
-              <CardFooter>
-                <Button variant="primary" className="w-full">View Payment History</Button>
-              </CardFooter>
             </Card>
 
+            {/* Earnings Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Availability</CardTitle>
-                <CardDescription>Manage your schedule</CardDescription>
+                <CardTitle>Earnings This Month</CardTitle>
+                <CardDescription>December 2024</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-3 bg-success-bg rounded-lg">
-                  <p className="text-sm text-success-text font-medium">Available Now</p>
-                  <p className="text-xs text-success-text">Next 4 hours open</p>
+              <CardContent className="space-y-3">
+                <div className="text-center p-4 bg-success-bg/10 rounded-lg">
+                  <p className="text-3xl font-bold text-success-text">${stats?.sessions_this_month ? stats.sessions_this_month * 125 : 0}</p>
+                  <p className="text-sm text-text-light mt-1">From {stats?.sessions_this_month} sessions</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Mon - Wed</span>
-                    <span className="text-sm text-text-light">2:00 PM - 8:00 PM</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-light">Completed</span>
+                    <span className="font-medium text-text">${stats?.sessions_this_month ? (stats.sessions_this_month - 1) * 125 : 0}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Thu - Fri</span>
-                    <span className="text-sm text-text-light">10:00 AM - 6:00 PM</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-text-light">Pending</span>
+                    <span className="font-medium text-warning-text">${stats?.pending_earnings}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Weekend</span>
-                    <span className="text-sm text-text-light">Flexible</span>
+                  <div className="flex justify-between text-sm pt-2 border-t border-border">
+                    <span className="font-medium text-text">Total Expected</span>
+                    <span className="font-semibold text-success-text">
+                      ${stats?.sessions_this_month ? stats.sessions_this_month * 125 : 0}
+                    </span>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="secondary" className="w-full">Update Availability</Button>
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Students</CardTitle>
-                <CardDescription>Active coaching relationships</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-3 border border-border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">SA</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-text">Sarah Anderson</span>
-                        <p className="text-xs text-text-light">3 sessions • Started Oct 15</p>
-                      </div>
-                    </div>
-                    <Badge variant="success">Progressing</Badge>
-                  </div>
-                  <p className="text-xs text-text-light bg-surface p-2 rounded">
-                    Focus: Neural networks foundations. Next: First project planning.
-                  </p>
                 </div>
                 
-                <div className="p-3 border border-border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">MJ</span>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-text">Marcus Johnson</span>
-                        <p className="text-xs text-text-light">1 session • Started Nov 28</p>
-                      </div>
-                    </div>
-                    <Badge variant="warning">Starting</Badge>
-                  </div>
-                  <p className="text-xs text-text-light bg-surface p-2 rounded">
-                    Focus: Career transition from software dev. Next: Learning roadmap.
-                  </p>
-                </div>
-
-                <div className="text-center p-3 bg-success-bg/10 rounded-lg">
-                  <p className="text-xs text-success-text font-medium">
-                    2/3 coaching slots filled
-                  </p>
-                  <p className="text-xs text-text-light">
-                    Available for 1 more long-term student
-                  </p>
-                </div>
+                <Button variant="primary" className="w-full mt-4">
+                  View Earnings Report
+                </Button>
               </CardContent>
-              <CardFooter>
-                <Button variant="secondary" className="w-full">Manage Students</Button>
-              </CardFooter>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="secondary" className="w-full justify-start">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  Block Time Off
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <DollarSignIcon className="w-4 h-4 mr-2" />
+                  Update Rates
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button variant="secondary" className="w-full justify-start">
+                  <StarIcon className="w-4 h-4 mr-2" />
+                  View Reviews
+                </Button>
+              </CardContent>
             </Card>
           </div>
         </div>

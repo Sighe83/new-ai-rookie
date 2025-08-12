@@ -19,7 +19,7 @@ export default function Home() {
       if (user) {
         const role = user.user_metadata?.role
         if (role === 'AI_ROOKIE') {
-          router.push('/dashboard/rookie')
+          router.push('/dashboard/learner')
         } else if (role === 'AI_EXPERT') {
           router.push('/dashboard/expert')
         }
@@ -34,7 +34,7 @@ export default function Home() {
       if (event === 'SIGNED_IN' && session?.user) {
         const role = session.user.user_metadata?.role
         if (role === 'AI_ROOKIE') {
-          router.push('/dashboard/rookie')
+          router.push('/dashboard/learner')
         } else if (role === 'AI_EXPERT') {
           router.push('/dashboard/expert')
         }
