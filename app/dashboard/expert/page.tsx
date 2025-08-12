@@ -291,7 +291,7 @@ export default function ExpertDashboard() {
               <h1 className="text-xl font-bold text-text">AI Expert Hub</h1>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard/expert" className="text-primary font-medium">Dashboard</a>
-                <a href="/sessions" className="text-text-light hover:text-text">Sessions</a>
+                <a href="/dashboard/expert/sessions" className="text-text-light hover:text-text">My Sessions</a>
                 <a href="/earnings" className="text-text-light hover:text-text">Earnings</a>
                 <a href="/dashboard/expert/availability" className="text-text-light hover:text-text">Availability</a>
                 <a href="/profile" className="text-text-light hover:text-text">Profile</a>
@@ -546,6 +546,14 @@ export default function ExpertDashboard() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start"
+                  onClick={() => router.push('/dashboard/expert/sessions')}
+                >
+                  <VideoIcon className="w-4 h-4 mr-2" />
+                  Manage Sessions
+                </Button>
                 <Button variant="secondary" className="w-full justify-start">
                   <CalendarIcon className="w-4 h-4 mr-2" />
                   Mark Unavailable

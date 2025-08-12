@@ -1,0 +1,308 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { CreateExpertSessionRequest, ExpertSessionFilters, SessionLevel } from '@/types/expert-sessions'
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    
+    // Extract filter parameters
+    const mySessionsOnly = searchParams.get('my_sessions') === 'true'
+    const filters: ExpertSessionFilters = {
+      expert_id: searchParams.get('expert_id') || undefined,
+      level: (searchParams.get('level') as SessionLevel | null) || undefined,
+      topic_tags: searchParams.get('topic_tags')?.split(',').filter(Boolean) || undefined,
+      min_duration: searchParams.get('min_duration') ? parseInt(searchParams.get('min_duration')!) : undefined,
+      max_duration: searchParams.get('max_duration') ? parseInt(searchParams.get('max_duration')!) : undefined,
+      min_price: searchParams.get('min_price') ? parseInt(searchParams.get('min_price')!) : undefined,
+      max_price: searchParams.get('max_price') ? parseInt(searchParams.get('max_price')!) : undefined,
+      search_query: searchParams.get('search') || undefined,
+      has_availability_only: searchParams.get('has_availability_only') === 'true',
+    }
+    
+    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Use the database function for complex filtering with availability
+    if (filters.has_availability_only) {
+      const { data: sessions, error } = await supabase
+        .rpc('get_expert_sessions_with_availability', {
+          p_expert_id: filters.expert_id || null,
+          p_level: filters.level || null,
+          p_topic_tags: filters.topic_tags || null,
+          p_min_duration: filters.min_duration || null,
+          p_max_duration: filters.max_duration || null,
+          p_min_price: filters.min_price || null,
+          p_max_price: filters.max_price || null,
+        })
+
+      if (error) {
+        console.error('Error fetching expert sessions with availability:', error)
+        return NextResponse.json({ error: 'Failed to fetch expert sessions' }, { status: 500 })
+      }
+
+      return NextResponse.json({ 
+        sessions: sessions || [],
+        filters_applied: filters
+      })
+    }
+
+    // Build query for regular session listing
+    let query = supabase
+      .from('expert_sessions')
+      .select(`
+        id,
+        expert_id,
+        title,
+        short_description,
+        topic_tags,
+        duration_minutes,
+        price_amount,
+        currency,
+        level,
+        prerequisites,
+        materials_url,
+        is_active,
+        created_at,
+        updated_at,
+        expert_profiles!inner(
+          id,
+          bio,
+          rating,
+          total_sessions,
+          user_profiles!inner(
+            display_name,
+            first_name,
+            last_name
+          )
+        )
+      `)
+
+    // Apply filters
+    if (filters.expert_id) {
+      query = query.eq('expert_id', filters.expert_id)
+    }
+
+    if (filters.level) {
+      query = query.eq('level', filters.level)
+    }
+
+    if (filters.topic_tags && filters.topic_tags.length > 0) {
+      query = query.overlaps('topic_tags', filters.topic_tags)
+    }
+
+    if (filters.min_duration) {
+      query = query.gte('duration_minutes', filters.min_duration)
+    }
+
+    if (filters.max_duration) {
+      query = query.lte('duration_minutes', filters.max_duration)
+    }
+
+    if (filters.min_price) {
+      query = query.gte('price_amount', filters.min_price)
+    }
+
+    if (filters.max_price) {
+      query = query.lte('price_amount', filters.max_price)
+    }
+
+    // Search functionality
+    if (filters.search_query) {
+      query = query.textSearch('title,short_description', filters.search_query)
+    }
+
+    // Default filters - only active sessions from available experts
+    query = query
+      .eq('is_active', true)
+      .eq('expert_profiles.is_available', true)
+
+    // Order by rating and creation date
+    query = query.order('created_at', { ascending: false })
+
+    const { data: sessions, error } = await query
+
+    if (error) {
+      console.error('Error fetching expert sessions:', error)
+      return NextResponse.json({ error: 'Failed to fetch expert sessions' }, { status: 500 })
+    }
+
+    // Transform data to match expected format
+    const transformedSessions = sessions?.map(session => {
+      const expertProfile = Array.isArray(session.expert_profiles) ? session.expert_profiles[0] : session.expert_profiles
+      const userProfile = Array.isArray(expertProfile.user_profiles) ? expertProfile.user_profiles[0] : expertProfile.user_profiles
+      
+      return {
+        ...session,
+        expert_display_name: userProfile.display_name,
+        expert_bio: expertProfile.bio,
+        expert_rating: expertProfile.rating,
+        expert_total_sessions: expertProfile.total_sessions,
+        has_availability: false, // Not calculated in basic query
+      }
+    }) || []
+
+    return NextResponse.json({ 
+      sessions: transformedSessions,
+      filters_applied: filters
+    })
+
+  } catch (error) {
+    console.error('Expert sessions GET error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body: CreateExpertSessionRequest = await request.json()
+    const { 
+      title, 
+      short_description, 
+      topic_tags, 
+      duration_minutes, 
+      price_amount, 
+      currency = 'DKK',
+      level,
+      prerequisites,
+      materials_url 
+    } = body
+
+    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user's expert profile
+    const { data: userProfile, error: userProfileError } = await supabase
+      .from('user_profiles')
+      .select('id, role')
+      .eq('user_id', user.id)
+      .single()
+
+    if (userProfileError || !userProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    }
+
+    if (userProfile.role !== 'expert' && userProfile.role !== 'admin') {
+      return NextResponse.json({ error: 'Only experts can create sessions' }, { status: 403 })
+    }
+
+    const { data: expertProfile, error: expertError } = await supabase
+      .from('expert_profiles')
+      .select('id')
+      .eq('user_profile_id', userProfile.id)
+      .single()
+
+    if (expertError || !expertProfile) {
+      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
+    }
+
+    // Basic validation
+    if (!title?.trim() || title.trim().length < 3) {
+      return NextResponse.json({ error: 'Title must be at least 3 characters' }, { status: 400 })
+    }
+
+    if (!short_description?.trim() || short_description.trim().length < 10) {
+      return NextResponse.json({ error: 'Description must be at least 10 characters' }, { status: 400 })
+    }
+
+    if (!topic_tags || topic_tags.length === 0) {
+      return NextResponse.json({ error: 'At least one topic tag is required' }, { status: 400 })
+    }
+
+    if (topic_tags.length > 10) {
+      return NextResponse.json({ error: 'Maximum 10 topic tags allowed' }, { status: 400 })
+    }
+
+    // Validate topic tags
+    for (const tag of topic_tags) {
+      if (!tag.trim()) {
+        return NextResponse.json({ error: 'Topic tags cannot be empty' }, { status: 400 })
+      }
+      if (tag.length > 50) {
+        return NextResponse.json({ error: 'Topic tags cannot exceed 50 characters' }, { status: 400 })
+      }
+    }
+
+    if (!duration_minutes || duration_minutes % 15 !== 0 || duration_minutes < 15 || duration_minutes > 480) {
+      return NextResponse.json({ error: 'Duration must be a multiple of 15 minutes, between 15 and 480 minutes' }, { status: 400 })
+    }
+
+    if (!price_amount || price_amount < 0) {
+      return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
+    }
+
+    // Validate minimum hourly rate for DKK
+    if (currency === 'DKK') {
+      const hourlyRate = (price_amount * 60) / duration_minutes
+      if (hourlyRate < 5000) { // 50 DKK/hour in øre
+        return NextResponse.json({ error: 'Minimum hourly rate is 50 DKK/hour' }, { status: 400 })
+      }
+    }
+
+    if (!['DKK', 'USD', 'EUR'].includes(currency)) {
+      return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 })
+    }
+
+    if (level && !['BEGINNER', 'INTERMEDIATE', 'ADVANCED'].includes(level)) {
+      return NextResponse.json({ error: 'Invalid level' }, { status: 400 })
+    }
+
+    if (materials_url && !materials_url.match(/^https?:\/\/.+/)) {
+      return NextResponse.json({ error: 'Materials URL must be a valid HTTP/HTTPS URL' }, { status: 400 })
+    }
+
+    // Create the expert session
+    const { data: newSession, error: createError } = await supabase
+      .from('expert_sessions')
+      .insert({
+        expert_id: expertProfile.id,
+        title: title.trim(),
+        short_description: short_description.trim(),
+        topic_tags: topic_tags.map(tag => tag.trim()).filter(Boolean),
+        duration_minutes,
+        price_amount,
+        currency,
+        level: level || null,
+        prerequisites: prerequisites?.trim() || null,
+        materials_url: materials_url?.trim() || null,
+        is_active: true
+      })
+      .select(`
+        id,
+        expert_id,
+        title,
+        short_description,
+        topic_tags,
+        duration_minutes,
+        price_amount,
+        currency,
+        level,
+        prerequisites,
+        materials_url,
+        is_active,
+        created_at,
+        updated_at
+      `)
+      .single()
+
+    if (createError) {
+      console.error('Error creating expert session:', createError)
+      return NextResponse.json({ error: createError.message || 'Failed to create expert session' }, { status: 500 })
+    }
+
+    return NextResponse.json({ 
+      message: 'Expert session created successfully',
+      session: newSession 
+    }, { status: 201 })
+
+  } catch (error) {
+    console.error('Expert sessions POST error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
