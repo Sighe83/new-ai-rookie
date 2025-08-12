@@ -39,7 +39,7 @@ export default function Signup({ onBackToLogin }: SignupProps) {
         password,
         options: {
           data: {
-            role: 'AI_ROOKIE'
+            role: 'learner'
           }
         }
       })

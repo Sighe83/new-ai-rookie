@@ -20,14 +20,38 @@ export default function Login({ onSignupClick }: LoginProps) {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
+      
+      // Check if email is confirmed for users created via admin (experts)
+      if (data.user && !data.user.email_confirmed_at) {
+        // Sign out the user since they shouldn't be allowed to login unverified
+        await supabase.auth.signOut()
+        throw new Error('Email not confirmed')
+      }
+      
+      // Log successful authentication for debugging
+      console.log('Login successful:', data)
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      console.error('Login error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.')
+      } else if (errorMessage.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and ensure your email is confirmed.')
+      } else if (errorMessage.includes('Email rate limit exceeded')) {
+        setError('Too many requests. Please wait a few minutes before trying again.')
+      } else {
+        setError(errorMessage)
+      }
+      
+      console.log('Full error details:', error)
     } finally {
       setLoading(false)
     }
