@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, AppUser } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Badge } from '@/components/ui'
@@ -38,10 +38,11 @@ interface ExpertStats {
 
 interface AvailabilitySlot {
   id: string
-  day_of_week: number
-  start_time: string
-  end_time: string
-  is_active: boolean
+  start_at: string
+  end_at: string
+  is_closed: boolean
+  notes?: string
+  created_at: string
 }
 
 export default function ExpertDashboard() {
@@ -51,67 +52,35 @@ export default function ExpertDashboard() {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
   const router = useRouter()
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+  const loadAvailabilityWindows = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
       
-      if (!user) {
-        router.push('/')
+      if (!session?.access_token) {
+        console.error('No access token available')
         return
       }
 
-      try {
-        // Check database role first
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single()
-        
-        let userRole = 'learner' // default
-        
-        if (!profileError && profileData?.role) {
-          userRole = profileData.role
-        } else {
-          // Fallback to user metadata
-          const metaRole = user.user_metadata?.role
-          if (metaRole === 'AI_EXPERT' || metaRole === 'expert') {
-            userRole = 'expert'
-          }
+      const response = await fetch('/api/availability-windows?include_all=true', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
         }
-        
-        // If not expert, redirect to appropriate dashboard
-        if (userRole !== 'expert') {
-          if (userRole === 'admin') {
-            router.push('/admin')
-          } else {
-            router.push('/dashboard/learner')
-          }
-          return
-        }
+      })
 
-        setUser(user)
-        await loadDashboardData(user.id)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error checking user role:', error)
-        // Fallback to metadata check
-        const metaRole = user.user_metadata?.role
-        if (metaRole !== 'AI_EXPERT' && metaRole !== 'expert') {
-          router.push('/dashboard/learner')
-          return
-        }
-        
-        setUser(user)
-        await loadDashboardData(user.id)
-        setLoading(false)
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Failed to load availability windows:', errorData.error)
+        return
       }
+
+      const data = await response.json()
+      setAvailability(data.windows || [])
+    } catch (error) {
+      console.error('Error loading availability windows:', error)
     }
+  }, [])
 
-    getUser()
-  }, [router])
-
-  const loadDashboardData = async (userId: string) => {
+  const loadDashboardData = useCallback(async (userId: string) => {
     // Mock data representing expert statistics
     const mockStats: ExpertStats = {
       total_earnings: 8750,
@@ -172,17 +141,69 @@ export default function ExpertDashboard() {
       ],
     }
 
-    const mockAvailability: AvailabilitySlot[] = [
-      { id: '1', day_of_week: 1, start_time: '09:00', end_time: '12:00', is_active: true },
-      { id: '2', day_of_week: 1, start_time: '14:00', end_time: '17:00', is_active: true },
-      { id: '3', day_of_week: 3, start_time: '10:00', end_time: '13:00', is_active: true },
-      { id: '4', day_of_week: 3, start_time: '15:00', end_time: '18:00', is_active: true },
-      { id: '5', day_of_week: 5, start_time: '09:00', end_time: '12:00', is_active: true }
-    ]
-
     setStats(mockStats)
-    setAvailability(mockAvailability)
-  }
+    await loadAvailabilityWindows()
+  }, [loadAvailabilityWindows])
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/')
+        return
+      }
+
+      try {
+        // Check database role first
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single()
+        
+        let userRole = 'learner' // default
+        
+        if (!profileError && profileData?.role) {
+          userRole = profileData.role
+        } else {
+          // Fallback to user metadata
+          const metaRole = user.user_metadata?.role
+          if (metaRole === 'AI_EXPERT' || metaRole === 'expert') {
+            userRole = 'expert'
+          }
+        }
+        
+        // If not expert, redirect to appropriate dashboard
+        if (userRole !== 'expert') {
+          if (userRole === 'admin') {
+            router.push('/admin')
+          } else {
+            router.push('/dashboard/learner')
+          }
+          return
+        }
+
+        setUser(user)
+        await loadDashboardData(user.id)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error checking user role:', error)
+        // Fallback to metadata check
+        const metaRole = user.user_metadata?.role
+        if (metaRole !== 'AI_EXPERT' && metaRole !== 'expert') {
+          router.push('/dashboard/learner')
+          return
+        }
+        
+        setUser(user)
+        await loadDashboardData(user.id)
+        setLoading(false)
+      }
+    }
+
+    getUser()
+  }, [router, loadDashboardData])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -212,9 +233,42 @@ export default function ExpertDashboard() {
     })
   }
 
-  const getDayName = (day: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    return days[day]
+  const formatAvailabilityTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString)
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric'
+    })
+  }
+
+  const formatTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString)
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  const getAvailabilityDuration = (startAt: string, endAt: string) => {
+    const start = new Date(startAt)
+    const end = new Date(endAt)
+    const diffMs = end.getTime() - start.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+    
+    if (diffHours < 1) {
+      const diffMinutes = Math.round(diffMs / (1000 * 60))
+      return `${diffMinutes}min`
+    } else if (diffHours === 1) {
+      return '1hr'
+    } else if (diffHours % 1 === 0) {
+      return `${diffHours}hrs`
+    } else {
+      const hours = Math.floor(diffHours)
+      const minutes = Math.round((diffHours - hours) * 60)
+      return `${hours}hr ${minutes}min`
+    }
   }
 
   if (loading) {
@@ -239,7 +293,7 @@ export default function ExpertDashboard() {
                 <a href="/dashboard/expert" className="text-primary font-medium">Dashboard</a>
                 <a href="/sessions" className="text-text-light hover:text-text">Sessions</a>
                 <a href="/earnings" className="text-text-light hover:text-text">Earnings</a>
-                <a href="/availability" className="text-text-light hover:text-text">Availability</a>
+                <a href="/dashboard/expert/availability" className="text-text-light hover:text-text">Availability</a>
                 <a href="/profile" className="text-text-light hover:text-text">Profile</a>
               </nav>
             </div>
@@ -442,27 +496,46 @@ export default function ExpertDashboard() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>When You&apos;re Available</CardTitle>
-                  <Button size="sm" variant="secondary">Edit</Button>
+                  <div>
+                    <CardTitle>When You&apos;re Available</CardTitle>
+                    <CardDescription>
+                      {availability.length === 0 
+                        ? 'No availability windows' 
+                        : `${availability.filter(w => !w.is_closed).length} open windows`}
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" variant="secondary" onClick={() => router.push('/dashboard/expert/availability')}>
+                    Manage
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {availability.map((slot) => (
-                  <div key={slot.id} className="flex items-center justify-between p-3 bg-surface rounded-lg">
-                    <div>
-                      <p className="font-medium text-text text-sm">{getDayName(slot.day_of_week)}</p>
-                      <p className="text-xs text-text-light">
-                        {slot.start_time} - {slot.end_time}
-                      </p>
+                {availability.length > 0 ? (
+                  availability.map((window) => (
+                    <div key={window.id} className="flex items-center justify-between p-3 bg-surface rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium text-text text-sm">{formatAvailabilityTime(window.start_at)}</p>
+                        <p className="text-xs text-text-light">
+                          {formatTime(window.start_at)} - {formatTime(window.end_at)} • {getAvailabilityDuration(window.start_at, window.end_at)}
+                        </p>
+                        {window.notes && (
+                          <p className="text-xs text-text-light mt-1 italic">{window.notes}</p>
+                        )}
+                      </div>
+                      <Badge variant={!window.is_closed ? 'success' : 'neutral'}>
+                        {!window.is_closed ? 'Open' : 'Closed'}
+                      </Badge>
                     </div>
-                    <Badge variant={slot.is_active ? 'success' : 'neutral'}>
-                      {slot.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-text-light mb-2">No availability windows created yet</p>
+                    <p className="text-xs text-text-light">Create your first availability window to start accepting bookings</p>
                   </div>
-                ))}
-                <Button variant="secondary" className="w-full mt-4">
+                )}
+                <Button variant="secondary" className="w-full mt-4" onClick={() => router.push('/dashboard/expert/availability')}>
                   <CalendarDaysIcon className="w-4 h-4 mr-2" />
-                  Update Your Schedule
+                  {availability.length > 0 ? 'Manage Availability' : 'Create Availability Windows'}
                 </Button>
               </CardContent>
             </Card>
