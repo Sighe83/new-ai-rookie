@@ -9,7 +9,7 @@ export interface DashboardLayoutProps extends BaseComponentProps {
 }
 
 export const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(
-  ({ className, menu, content, divProps, ...props }, ref) => (
+  ({ className, menu, content, divProps }, ref) => (
     <div
       ref={ref}
       className={cn('bg-base rounded-xl border border-border overflow-hidden flex h-[400px]', className)}

@@ -353,7 +353,7 @@ export default function ExpertDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Upcoming Sessions</CardTitle>
-                    <CardDescription>When you're available to help</CardDescription>
+                    <CardDescription>When you&apos;re available to help</CardDescription>
                   </div>
                   <Badge variant="primary">{stats?.upcoming_sessions.length} scheduled</Badge>
                 </div>
@@ -404,7 +404,7 @@ export default function ExpertDashboard() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>When You're Available</CardTitle>
+                  <CardTitle>When You&apos;re Available</CardTitle>
                   <Button size="sm" variant="secondary">Edit</Button>
                 </div>
               </CardHeader>
