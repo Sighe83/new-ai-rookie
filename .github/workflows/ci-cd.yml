@@ -62,9 +62,9 @@ jobs:
             exit 1
           fi
 
-  # Deploy to staging environment
+  # Deploy to staging/dev environment
   deploy-staging:
-    name: Deploy to Staging
+    name: Deploy to Dev/Staging
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
     needs: [app-test, database-test]
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: |
           supabase link --project-ref ogohsocipjwhohoiiilk --password $SUPABASE_DB_PASSWORD
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD --yes
 
       - name: Deploy application to staging
         run: |
@@ -113,7 +113,7 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
         run: |
           supabase link --project-ref nowzrnuxrfsbmkszlves --password $SUPABASE_DB_PASSWORD
-          supabase db push --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD --yes
 
       - name: Deploy application to production
         run: |
