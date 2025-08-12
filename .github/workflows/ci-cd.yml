@@ -83,8 +83,8 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: |
-          supabase link --project-ref ogohsocipjwhohoiiilk
-          supabase db push
+          supabase link --project-ref ogohsocipjwhohoiiilk --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD
 
       - name: Deploy application to staging
         run: |
@@ -112,8 +112,8 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
         run: |
-          supabase link --project-ref nowzrnuxrfsbmkszlves
-          supabase db push
+          supabase link --project-ref nowzrnuxrfsbmkszlves --password $SUPABASE_DB_PASSWORD
+          supabase db push --password $SUPABASE_DB_PASSWORD
 
       - name: Deploy application to production
         run: |
