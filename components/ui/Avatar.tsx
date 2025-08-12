@@ -1,4 +1,5 @@
 import { forwardRef, ImgHTMLAttributes } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { BaseComponentProps } from '@/types/design-system'
 
@@ -13,18 +14,31 @@ const sizes = {
 }
 
 const Avatar = forwardRef<HTMLImageElement, AvatarProps>(
-  ({ className, size = 'md', ...props }, ref) => (
-    <img
-      ref={ref}
-      className={cn(
-        'rounded-full object-cover',
-        sizes[size],
-        className
-      )}
-      alt={props.alt || 'Avatar'}
-      {...props}
-    />
-  )
+  ({ className, size = 'md', width, height, src, ...props }, ref) => {
+    const sizeValue = size === 'sm' ? 32 : size === 'md' ? 64 : 96
+    const imageWidth = typeof width === 'number' ? width : sizeValue
+    const imageHeight = typeof height === 'number' ? height : sizeValue
+    
+    if (!src || typeof src !== 'string') {
+      return null
+    }
+    
+    return (
+      <Image
+        ref={ref}
+        src={src}
+        className={cn(
+          'rounded-full object-cover',
+          sizes[size],
+          className
+        )}
+        alt={props.alt || 'Avatar'}
+        width={imageWidth}
+        height={imageHeight}
+        {...props}
+      />
+    )
+  }
 )
 
 Avatar.displayName = 'Avatar'

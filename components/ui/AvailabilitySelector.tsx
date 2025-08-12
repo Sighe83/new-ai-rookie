@@ -14,7 +14,7 @@ export interface AvailabilitySelectorProps extends BaseComponentProps {
 }
 
 export const AvailabilitySelector = forwardRef<HTMLDivElement, AvailabilitySelectorProps>(
-  ({ className, slots, onSelect, divProps, ...props }, ref) => (
+  ({ className, slots, onSelect, divProps }, ref) => (
     <div
       ref={ref}
       className={cn('grid grid-cols-2 gap-3 text-center', className)}
