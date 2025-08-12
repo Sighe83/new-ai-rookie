@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase, AppUser } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Badge } from '@/components/ui'
-import { CalendarIcon, UserIcon, TrendingUpIcon, DollarSignIcon, VideoIcon, MessageSquareIcon, StarIcon, CalendarDaysIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react'
+import { CalendarIcon, UserIcon, TrendingUpIcon, DollarSignIcon, VideoIcon, MessageSquareIcon, StarIcon, CalendarDaysIcon } from 'lucide-react'
 
 interface Session {
   id: string
@@ -34,7 +34,6 @@ interface ExpertStats {
   completion_rate: number
   next_session?: Session
   upcoming_sessions: Session[]
-  pending_requests: Session[]
 }
 
 interface AvailabilitySlot {
@@ -80,7 +79,7 @@ export default function ExpertDashboard() {
       total_earnings: 8750,
       pending_earnings: 625,
       total_sessions: 72,
-      sessions_this_month: 8,
+      sessions_this_month: 2,
       average_rating: 4.9,
       total_reviews: 45,
       completion_rate: 98,
@@ -93,7 +92,7 @@ export default function ExpertDashboard() {
         status: 'confirmed',
         price: 125,
         meeting_url: 'https://zoom.us/j/123456789',
-        notes: 'Continuing neural network implementation discussion',
+        notes: 'Available when convenient - flexible timing for this session',
         learner: {
           id: 'learner-1',
           full_name: 'Alex Johnson',
@@ -133,23 +132,6 @@ export default function ExpertDashboard() {
           }
         }
       ],
-      pending_requests: [
-        {
-          id: '4',
-          expert_id: userId,
-          learner_id: 'learner-4',
-          scheduled_at: new Date(Date.now() + 259200000).toISOString(), // In 3 days
-          duration_minutes: 60,
-          status: 'pending',
-          price: 125,
-          learner: {
-            id: 'learner-4',
-            full_name: 'Emma Thompson',
-            email: 'emma@example.com',
-            sessions_completed: 0
-          }
-        }
-      ]
     }
 
     const mockAvailability: AvailabilitySlot[] = [
@@ -246,7 +228,7 @@ export default function ExpertDashboard() {
             Expert Dashboard
           </h2>
           <p className="text-text-light">
-            Manage your coaching sessions and track your impact
+            Connect with learners when your schedule allows
           </p>
         </div>
 
@@ -271,9 +253,9 @@ export default function ExpertDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-text-light mb-1">Total Sessions</p>
+                  <p className="text-sm text-text-light mb-1">Total Coaching Sessions</p>
                   <p className="text-2xl font-bold text-text">{stats?.total_sessions}</p>
-                  <p className="text-xs text-primary mt-1">{stats?.sessions_this_month} this month</p>
+                  <p className="text-xs text-primary mt-1">{stats?.sessions_this_month} recently</p>
                 </div>
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                   <VideoIcon className="w-6 h-6 text-primary" />
@@ -322,7 +304,7 @@ export default function ExpertDashboard() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Next Session Starting Soon</CardTitle>
+                      <CardTitle>Your Next Coaching Session</CardTitle>
                       <CardDescription>
                         {formatDate(stats.next_session.scheduled_at)} • {stats.next_session.duration_minutes} minutes
                       </CardDescription>
@@ -371,7 +353,7 @@ export default function ExpertDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Upcoming Sessions</CardTitle>
-                    <CardDescription>Your confirmed coaching sessions</CardDescription>
+                    <CardDescription>When you're available to help</CardDescription>
                   </div>
                   <Badge variant="primary">{stats?.upcoming_sessions.length} scheduled</Badge>
                 </div>
@@ -414,56 +396,6 @@ export default function ExpertDashboard() {
               </CardFooter>
             </Card>
 
-            {/* Pending Requests */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Pending Requests</CardTitle>
-                    <CardDescription>Review and accept session requests</CardDescription>
-                  </div>
-                  <Badge variant="warning">{stats?.pending_requests.length} pending</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {stats?.pending_requests.map((request) => (
-                  <div key={request.id} className="p-4 bg-warning-bg/10 rounded-lg border border-warning-bg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-warning-bg/20 rounded-lg flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 text-warning-text" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-text">{request.learner.full_name}</p>
-                          <p className="text-sm text-text-light">
-                            {formatDate(request.scheduled_at)} • {request.duration_minutes} min
-                          </p>
-                          <p className="text-xs text-warning-text mt-1">
-                            New learner • First session
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-accent">${request.price}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="primary" className="flex-1">
-                        <CheckCircleIcon className="w-4 h-4 mr-2" />
-                        Accept
-                      </Button>
-                      <Button size="sm" variant="destructive">
-                        <XCircleIcon className="w-4 h-4 mr-2" />
-                        Decline
-                      </Button>
-                      <Button size="sm" variant="secondary">
-                        View Profile
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar */}
@@ -472,7 +404,7 @@ export default function ExpertDashboard() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>Your Availability</CardTitle>
+                  <CardTitle>When You're Available</CardTitle>
                   <Button size="sm" variant="secondary">Edit</Button>
                 </div>
               </CardHeader>
@@ -492,42 +424,7 @@ export default function ExpertDashboard() {
                 ))}
                 <Button variant="secondary" className="w-full mt-4">
                   <CalendarDaysIcon className="w-4 h-4 mr-2" />
-                  Manage Availability
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Earnings Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Earnings This Month</CardTitle>
-                <CardDescription>December 2024</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-center p-4 bg-success-bg/10 rounded-lg">
-                  <p className="text-3xl font-bold text-success-text">${stats?.sessions_this_month ? stats.sessions_this_month * 125 : 0}</p>
-                  <p className="text-sm text-text-light mt-1">From {stats?.sessions_this_month} sessions</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-light">Completed</span>
-                    <span className="font-medium text-text">${stats?.sessions_this_month ? (stats.sessions_this_month - 1) * 125 : 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-light">Pending</span>
-                    <span className="font-medium text-warning-text">${stats?.pending_earnings}</span>
-                  </div>
-                  <div className="flex justify-between text-sm pt-2 border-t border-border">
-                    <span className="font-medium text-text">Total Expected</span>
-                    <span className="font-semibold text-success-text">
-                      ${stats?.sessions_this_month ? stats.sessions_this_month * 125 : 0}
-                    </span>
-                  </div>
-                </div>
-                
-                <Button variant="primary" className="w-full mt-4">
-                  View Earnings Report
+                  Update Your Schedule
                 </Button>
               </CardContent>
             </Card>
@@ -540,7 +437,7 @@ export default function ExpertDashboard() {
               <CardContent className="space-y-3">
                 <Button variant="secondary" className="w-full justify-start">
                   <CalendarIcon className="w-4 h-4 mr-2" />
-                  Block Time Off
+                  Mark Unavailable
                 </Button>
                 <Button variant="secondary" className="w-full justify-start">
                   <DollarSignIcon className="w-4 h-4 mr-2" />
@@ -556,6 +453,7 @@ export default function ExpertDashboard() {
                 </Button>
               </CardContent>
             </Card>
+
           </div>
         </div>
       </main>

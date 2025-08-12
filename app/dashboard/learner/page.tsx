@@ -70,7 +70,7 @@ export default function LearnerDashboard() {
     const mockProgress: LearningProgress = {
       total_sessions: 12,
       total_hours: 18,
-      sessions_this_month: 3,
+      sessions_this_month: 1,
       money_spent: 1350,
       next_session: {
         id: '1',
@@ -81,7 +81,7 @@ export default function LearnerDashboard() {
         status: 'confirmed',
         price: 125,
         meeting_url: 'https://zoom.us/j/123456789',
-        notes: 'Discussing neural network implementation and reviewing your project progress',
+        notes: 'Continue discussing your project - flexible on timing to fit your schedule',
         expert: {
           id: 'expert-1',
           full_name: 'Dr. Sarah Chen',
@@ -118,7 +118,7 @@ export default function LearnerDashboard() {
         learner_id: userId,
         scheduled_at: new Date(Date.now() + 432000000).toISOString(), // In 5 days
         duration_minutes: 60,
-        status: 'pending',
+        status: 'confirmed',
         price: 125,
         expert: {
           id: 'expert-1',
@@ -179,7 +179,6 @@ export default function LearnerDashboard() {
                 <a href="/dashboard/learner" className="text-primary font-medium">Dashboard</a>
                 <a href="/experts" className="text-text-light hover:text-text">Find Experts</a>
                 <a href="/sessions" className="text-text-light hover:text-text">My Sessions</a>
-                <a href="/resources" className="text-text-light hover:text-text">Resources</a>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
@@ -205,7 +204,7 @@ export default function LearnerDashboard() {
             Welcome back, {user?.email?.split('@')[0]}!
           </h2>
           <p className="text-text-light">
-            Continue your AI learning journey with personalized coaching
+            Connect with AI experts for monthly coaching sessions
           </p>
         </div>
 
@@ -243,7 +242,7 @@ export default function LearnerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-text-light mb-1">This Month</p>
+                  <p className="text-sm text-text-light mb-1">Recent Sessions</p>
                   <p className="text-2xl font-bold text-text">{progress?.sessions_this_month || 0}</p>
                 </div>
                 <div className="w-12 h-12 bg-success-bg/10 rounded-xl flex items-center justify-center">
@@ -292,7 +291,7 @@ export default function LearnerDashboard() {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-text">{progress.next_session.expert.full_name}</h4>
-                      <p className="text-sm text-text-light mb-2">AI Expert • {progress.next_session.expert.rating} ★</p>
+                      <p className="text-sm text-text-light mb-2">Your AI Coach • {progress.next_session.expert.rating} ★</p>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {progress.next_session.expert.expertise.map((skill, idx) => (
                           <Badge key={idx} variant="neutral">{skill}</Badge>
@@ -324,8 +323,8 @@ export default function LearnerDashboard() {
             {/* Upcoming Sessions */}
             <Card>
               <CardHeader>
-                <CardTitle>Upcoming Sessions</CardTitle>
-                <CardDescription>Your scheduled coaching sessions</CardDescription>
+                <CardTitle>Your Next Sessions</CardTitle>
+                <CardDescription>Scheduled with your AI coach</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {upcomingSessions.map((session) => (
@@ -350,9 +349,6 @@ export default function LearnerDashboard() {
                       <p className="text-sm text-accent font-medium">${session.price}</p>
                       <div className="flex gap-2">
                         <Button size="sm" variant="secondary">View Details</Button>
-                        {session.status === 'pending' && (
-                          <Button size="sm" variant="primary">Confirm</Button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -363,38 +359,6 @@ export default function LearnerDashboard() {
               </CardFooter>
             </Card>
 
-            {/* Learning Path */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Learning Journey</CardTitle>
-                <CardDescription>Progress and milestones</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-success-text rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="font-medium text-text">Foundation Complete</p>
-                      <p className="text-sm text-text-light">Completed Python basics and ML fundamentals</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 animate-pulse"></div>
-                    <div className="flex-1">
-                      <p className="font-medium text-text">Neural Networks in Progress</p>
-                      <p className="text-sm text-text-light">Currently learning deep learning concepts</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-border rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="font-medium text-text-light">Advanced Topics</p>
-                      <p className="text-sm text-text-light">Computer vision and NLP upcoming</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar */}
@@ -407,11 +371,7 @@ export default function LearnerDashboard() {
               <CardContent className="space-y-3">
                 <Button variant="secondary" className="w-full justify-start">
                   <UserIcon className="w-4 h-4 mr-2" />
-                  Browse AI Experts
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <BookOpenIcon className="w-4 h-4 mr-2" />
-                  Learning Resources
+                  Find Your AI Coach
                 </Button>
                 <Button variant="secondary" className="w-full justify-start">
                   <ClockIcon className="w-4 h-4 mr-2" />
