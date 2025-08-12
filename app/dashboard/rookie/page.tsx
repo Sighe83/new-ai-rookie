@@ -70,7 +70,7 @@ export default function RookieDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text mb-2">
-            Your AI Coaching Journey 🚀
+            Your AI Learning Journey 🚀
           </h2>
           <p className="text-text-light">
             Connect with AI experts for personalized guidance and mentoring
@@ -84,7 +84,7 @@ export default function RookieDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Your Next Session</CardTitle>
-                    <CardDescription>Upcoming coaching conversation</CardDescription>
+                    <CardDescription>Upcoming learning session</CardDescription>
                   </div>
                   <Badge variant="success">Confirmed</Badge>
                 </div>
@@ -98,7 +98,7 @@ export default function RookieDashboard() {
                       </div>
                       <div>
                         <h4 className="text-lg font-semibold text-text">Dr. Sarah Chen</h4>
-                        <p className="text-sm text-text-light">Your AI Coach</p>
+                        <p className="text-sm text-text-light">AI Expert</p>
                         <p className="text-sm text-accent font-medium">Tomorrow, 2:00 PM (60 min)</p>
                       </div>
                     </div>
@@ -134,7 +134,7 @@ export default function RookieDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Your AI Coaching Relationship</CardTitle>
+                <CardTitle>Your AI Learning Partnership</CardTitle>
                 <CardDescription>Building expertise through personalized mentoring</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -145,7 +145,7 @@ export default function RookieDashboard() {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-text">Dr. Sarah Chen</h4>
-                      <p className="text-sm text-text-light">Your AI Coach • 3 sessions completed</p>
+                      <p className="text-sm text-text-light">AI Expert • 3 sessions completed</p>
                       <div className="flex items-center space-x-2 mt-1">
                         <div className="flex space-x-1">
                           {[1,2,3,4,5].map(star => (
@@ -161,7 +161,7 @@ export default function RookieDashboard() {
                   </div>
                   
                   <div className="mb-4 p-3 bg-base rounded-lg">
-                    <h5 className="text-sm font-semibold text-text mb-1">Coaching Focus Areas</h5>
+                    <h5 className="text-sm font-semibold text-text mb-1">Learning Focus Areas</h5>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <Badge variant="primary">Neural Networks</Badge>
                       <Badge variant="neutral">Python</Badge>
@@ -177,9 +177,9 @@ export default function RookieDashboard() {
 
                 <div className="text-center p-4 border border-border rounded-lg">
                   <p className="text-sm text-text-light mb-3">
-                    Need a different coaching style or expertise area?
+                    Need a different learning style or expertise area?
                   </p>
-                  <Button size="sm" variant="secondary">Find New Coach</Button>
+                  <Button size="sm" variant="secondary">Find New Expert</Button>
                 </div>
               </CardContent>
             </Card>
@@ -188,7 +188,7 @@ export default function RookieDashboard() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Coaching Journey</CardTitle>
+                <CardTitle>Learning Journey</CardTitle>
                 <CardDescription>Your personal growth in AI</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -199,11 +199,11 @@ export default function RookieDashboard() {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Total Coaching Hours</span>
+                    <span className="text-sm text-text">Total Learning Hours</span>
                     <Badge variant="primary">4.5h</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-text">Started Coaching</span>
+                    <span className="text-sm text-text">Started Learning</span>
                     <span className="text-sm text-text-light">Oct 15, 2024</span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -224,7 +224,7 @@ export default function RookieDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Session Notes & Insights</CardTitle>
-                <CardDescription>Key takeaways from your coaching</CardDescription>
+                <CardDescription>Key takeaways from your sessions</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="p-3 bg-success-bg/10 border border-success-bg rounded-lg">
@@ -274,7 +274,7 @@ export default function RookieDashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="primary" className="w-full">Schedule Next Session</Button>
-                <Button variant="secondary" className="w-full">Message Your Coach</Button>
+                <Button variant="secondary" className="w-full">Message Your Expert</Button>
                 <Button variant="secondary" className="w-full">Review Session Notes</Button>
               </CardContent>
             </Card>

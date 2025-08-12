@@ -1,0 +1,146 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Test the Next.js application
+  app-test:
+    name: Test Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+  # Test database migrations and setup
+  database-test:
+    name: Test Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local instance
+        run: supabase start
+
+      - name: Verify migrations
+        run: supabase db reset
+
+      - name: Run database tests (if any)
+        run: |
+          if [ -d "supabase/tests" ]; then
+            supabase test db
+          else
+            echo "No database tests found, skipping"
+          fi
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    needs: [app-test, database-test]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy database migrations to staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref ogohsocipjwhohoiiilk
+          supabase db push
+
+      - name: Deploy application to staging
+        run: |
+          echo "Deploy your Next.js app to staging here"
+          echo "This could be Vercel, Railway, or your preferred platform"
+
+  # Deploy to production environment  
+  deploy-production:
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [app-test, database-test]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy database migrations to production
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.PRODUCTION_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref nowzrnuxrfsbmkszlves
+          supabase db push
+
+      - name: Deploy application to production
+        run: |
+          echo "Deploy your Next.js app to production here"
+          echo "This could be Vercel, Railway, or your preferred platform"
+
+  # Create preview branch for pull requests
+  create-preview-branch:
+    name: Create Preview Branch
+    if: github.event_name == 'pull_request'
+    needs: [app-test, database-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Create preview branch
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Creating preview branch: $BRANCH_NAME"
+          
+          # Check if branch already exists, create if not
+          if ! supabase branches list --project-ref ogohsocipjwhohoiiilk | grep -q "$BRANCH_NAME"; then
+            supabase branches create $BRANCH_NAME --project-ref ogohsocipjwhohoiiilk
+          fi
+          
+          # Get branch details for PR comment
+          echo "Preview branch created: $BRANCH_NAME"

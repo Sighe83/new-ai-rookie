@@ -247,7 +247,7 @@ export default function LearnerDashboard() {
             Welcome back, {user?.email?.split('@')[0]}!
           </h2>
           <p className="text-text-light">
-            Connect with AI experts for monthly coaching sessions
+            Connect with AI experts for personalized learning sessions
           </p>
         </div>
 
@@ -334,7 +334,7 @@ export default function LearnerDashboard() {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-text">{progress.next_session.expert.full_name}</h4>
-                      <p className="text-sm text-text-light mb-2">Your AI Coach • {progress.next_session.expert.rating} ★</p>
+                      <p className="text-sm text-text-light mb-2">AI Expert • {progress.next_session.expert.rating} ★</p>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {progress.next_session.expert.expertise.map((skill, idx) => (
                           <Badge key={idx} variant="neutral">{skill}</Badge>
@@ -367,7 +367,7 @@ export default function LearnerDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Your Next Sessions</CardTitle>
-                <CardDescription>Scheduled with your AI coach</CardDescription>
+                <CardDescription>Scheduled with AI experts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {upcomingSessions.map((session) => (
@@ -406,31 +406,6 @@ export default function LearnerDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="secondary" 
-                  className="w-full justify-start"
-                  onClick={() => router.push('/dashboard/learner/experts')}
-                >
-                  <UserIcon className="w-4 h-4 mr-2" />
-                  Find Your AI Coach
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <ClockIcon className="w-4 h-4 mr-2" />
-                  Session History
-                </Button>
-                <Button variant="secondary" className="w-full justify-start">
-                  <DollarSignIcon className="w-4 h-4 mr-2" />
-                  Payment Methods
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Help Card */}
             <Card className="bg-accent/5 border-accent/20">
               <CardContent className="pt-6">
