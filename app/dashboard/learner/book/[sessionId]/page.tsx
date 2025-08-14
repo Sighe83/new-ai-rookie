@@ -58,7 +58,11 @@ export default function BookSessionPage({
         .single()
 
       if (sessionError) {
-        console.error('Session query error:', sessionError)
+        console.error('Database error fetching expert session:', {
+          error: sessionError,
+          session_id: resolvedParams.sessionId,
+          timestamp: new Date().toISOString()
+        })
         throw new Error('Session not found or inactive')
       }
 
@@ -79,29 +83,52 @@ export default function BookSessionPage({
       // Try to get the expert profile, but don't fail the whole page if this doesn't work
       try {
         const { data: expertData, error: expertError } = await supabase
-          .from('user_profiles')
-          .select('user_id, full_name, bio, avatar_url, first_name, last_name, display_name')
-          .eq('user_id', sessionData.expert_id)
+          .from('expert_profiles')
+          .select(`
+            id,
+            bio,
+            rating,
+            total_sessions,
+            user_profiles!inner(
+              user_id,
+              first_name,
+              last_name,
+              display_name,
+              avatar_url
+            )
+          `)
+          .eq('id', sessionData.expert_id)
           .maybeSingle()
 
         if (expertError) {
-          console.warn('Could not fetch expert profile:', expertError)
-        } else if (expertData) {
+          console.error('Database error fetching expert profile:', {
+            error: expertError,
+            expert_id: sessionData.expert_id,
+            timestamp: new Date().toISOString()
+          })
+        } else if (expertData && expertData.user_profiles) {
           // Update expert profile with real data if available
+          const userProfile = Array.isArray(expertData.user_profiles) 
+            ? expertData.user_profiles[0] 
+            : expertData.user_profiles
           expertProfile = {
             id: sessionData.expert_id,
-            full_name: expertData.full_name || 
-                       expertData.display_name || 
-                       `${expertData.first_name || ''} ${expertData.last_name || ''}`.trim() || 
+            full_name: userProfile.display_name || 
+                       `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim() || 
                        'AI Expert',
             bio: expertData.bio || 'Experienced AI professional ready to help you master AI skills.',
-            avatar_url: expertData.avatar_url,
-            rating: 4.8,
-            total_sessions: 42
+            avatar_url: userProfile.avatar_url,
+            rating: expertData.rating || 4.8,
+            total_sessions: expertData.total_sessions || 42
           }
         }
       } catch (profileError) {
-        console.warn('Expert profile query failed, using defaults:', profileError)
+        console.error('Expert profile query failed, using defaults:', {
+          error: profileError,
+          expert_id: sessionData.expert_id,
+          error_message: profileError instanceof Error ? profileError.message : 'Unknown profile error',
+          timestamp: new Date().toISOString()
+        })
       }
 
       setSession({
@@ -115,8 +142,13 @@ export default function BookSessionPage({
       
       setExpert(expertProfile)
     } catch (err) {
-      console.error('Error loading session:', err)
-      console.error('Session ID:', resolvedParams.sessionId)
+      console.error('Critical error in loadSessionAndExpert:', {
+        error: err,
+        session_id: resolvedParams.sessionId,
+        error_message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        timestamp: new Date().toISOString()
+      })
       setError(err instanceof Error ? err.message : 'Failed to load session')
     } finally {
       setLoading(false)

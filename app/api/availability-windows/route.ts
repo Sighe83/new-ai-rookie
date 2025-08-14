@@ -76,21 +76,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's expert profile
-    const { data: expertProfile, error: expertError } = await supabase
-      .from('expert_profiles')
+    // Get user's expert profile ID for the insert
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
       .select('id')
-      .eq('user_profile_id', (
-        await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-      ).data?.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (expertError || !expertProfile) {
-      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
+    if (!userProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    }
+
+    const { data: expertProfile } = await supabase
+      .from('expert_profiles')
+      .select('id')
+      .eq('user_profile_id', userProfile.id)
+      .single()
+
+    if (!expertProfile) {
+      return NextResponse.json({ error: 'Expert profile not found. Only experts can create availability windows.' }, { status: 403 })
     }
 
     // Validate time format and alignment
@@ -138,7 +142,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Availability window cannot be more than 180 days in the future' }, { status: 400 })
     }
 
-    // Create the availability window
+    // Create the availability window - RLS will verify the user owns this expert profile
     const { data: newWindow, error: createError } = await supabase
       .from('availability_windows')
       .insert({
@@ -153,6 +157,14 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error('Error creating availability window:', createError)
+      // Check for RLS errors
+      if (createError.code === 'PGRST301' || createError.message?.includes('security')) {
+        return NextResponse.json({ error: 'Unauthorized to create availability window' }, { status: 403 })
+      }
+      // Check for overlap or validation errors from database triggers
+      if (createError.message?.includes('overlap')) {
+        return NextResponse.json({ error: 'Availability window overlaps with existing window' }, { status: 409 })
+      }
       return NextResponse.json({ error: createError.message || 'Failed to create availability window' }, { status: 500 })
     }
 

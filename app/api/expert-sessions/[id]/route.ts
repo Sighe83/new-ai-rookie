@@ -88,31 +88,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's expert profile and verify ownership
-    const { data: userProfile, error: userProfileError } = await supabase
-      .from('user_profiles')
-      .select('id, role')
-      .eq('user_id', user.id)
-      .single()
-
-    if (userProfileError || !userProfile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-
-    const { data: expertProfile, error: expertError } = await supabase
-      .from('expert_profiles')
-      .select('id')
-      .eq('user_profile_id', userProfile.id)
-      .single()
-
-    if (expertError || !expertProfile) {
-      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
-    }
-
-    // Check if session exists and user owns it (or is admin)
+    // Get existing session for validation purposes only
     const { data: existingSession, error: sessionError } = await supabase
       .from('expert_sessions')
-      .select('id, expert_id, price_amount, duration_minutes, currency')
+      .select('price_amount, duration_minutes, currency')
       .eq('id', params.id)
       .single()
 
@@ -120,11 +99,7 @@ export async function PUT(
       if (sessionError.code === 'PGRST116') {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 })
       }
-      return NextResponse.json({ error: 'Failed to verify session ownership' }, { status: 500 })
-    }
-
-    if (existingSession.expert_id !== expertProfile.id && userProfile.role !== 'admin') {
-      return NextResponse.json({ error: 'You can only edit your own sessions' }, { status: 403 })
+      return NextResponse.json({ error: 'Failed to fetch session' }, { status: 500 })
     }
 
     // Validate updated fields
@@ -230,7 +205,7 @@ export async function PUT(
       return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 })
     }
 
-    // Update the session
+    // Update the session - RLS will handle authorization
     const { data: updatedSession, error: updateError } = await supabase
       .from('expert_sessions')
       .update(updates)
@@ -255,6 +230,10 @@ export async function PUT(
 
     if (updateError) {
       console.error('Error updating expert session:', updateError)
+      // Check if it's an RLS error
+      if (updateError.code === 'PGRST301' || updateError.message?.includes('security')) {
+        return NextResponse.json({ error: 'Unauthorized to update this session' }, { status: 403 })
+      }
       return NextResponse.json({ error: updateError.message || 'Failed to update expert session' }, { status: 500 })
     }
 
@@ -281,45 +260,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's expert profile and verify ownership
-    const { data: userProfile, error: userProfileError } = await supabase
-      .from('user_profiles')
-      .select('id, role')
-      .eq('user_id', user.id)
-      .single()
-
-    if (userProfileError || !userProfile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-
-    const { data: expertProfile, error: expertError } = await supabase
-      .from('expert_profiles')
-      .select('id')
-      .eq('user_profile_id', userProfile.id)
-      .single()
-
-    if (expertError || !expertProfile) {
-      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
-    }
-
-    // Check if session exists and user owns it (or is admin)
-    const { data: existingSession, error: sessionError } = await supabase
-      .from('expert_sessions')
-      .select('id, expert_id')
-      .eq('id', params.id)
-      .single()
-
-    if (sessionError) {
-      if (sessionError.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 })
-      }
-      return NextResponse.json({ error: 'Failed to verify session ownership' }, { status: 500 })
-    }
-
-    if (existingSession.expert_id !== expertProfile.id && userProfile.role !== 'admin') {
-      return NextResponse.json({ error: 'You can only delete your own sessions' }, { status: 403 })
-    }
-
     // Check if there are any active bookings for this session
     const { data: activeBookings, error: bookingsError } = await supabase
       .from('bookings')
@@ -340,6 +280,7 @@ export async function DELETE(
     }
 
     // Soft delete - set is_active to false instead of actually deleting
+    // RLS will handle authorization
     const { error: deleteError } = await supabase
       .from('expert_sessions')
       .update({ is_active: false })
@@ -347,6 +288,13 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting expert session:', deleteError)
+      // Check if it's an RLS error
+      if (deleteError.code === 'PGRST301' || deleteError.message?.includes('security')) {
+        return NextResponse.json({ error: 'Unauthorized to delete this session' }, { status: 403 })
+      }
+      if (deleteError.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+      }
       return NextResponse.json({ error: 'Failed to delete expert session' }, { status: 500 })
     }
 

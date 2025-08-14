@@ -14,6 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Trust RLS to handle authorization - just fetch the window
     const { data: window, error } = await supabase
       .from('availability_windows')
       .select(`
@@ -39,7 +40,11 @@ export async function GET(
 
     if (error) {
       console.error('Error fetching availability window:', error)
-      return NextResponse.json({ error: 'Availability window not found' }, { status: 404 })
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Availability window not found' }, { status: 404 })
+      }
+      // RLS will return error if unauthorized
+      return NextResponse.json({ error: 'Unauthorized or not found' }, { status: 403 })
     }
 
     return NextResponse.json({ window })
@@ -65,40 +70,15 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's expert profile
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!userProfile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
-    }
-
-    const { data: expertProfile } = await supabase
-      .from('expert_profiles')
-      .select('id')
-      .eq('user_profile_id', userProfile.id)
-      .single()
-
-    if (!expertProfile) {
-      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
-    }
-
-    // Verify the availability window belongs to this expert
+    // Get existing window for validation purposes only
     const { data: existingWindow, error: fetchError } = await supabase
       .from('availability_windows')
-      .select('expert_id, start_at')
+      .select('start_at, end_at')
       .eq('id', id)
       .single()
 
     if (fetchError || !existingWindow) {
       return NextResponse.json({ error: 'Availability window not found' }, { status: 404 })
-    }
-
-    if (existingWindow.expert_id !== expertProfile.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Build update object
@@ -147,22 +127,7 @@ export async function PUT(
         (!start_at && end_at !== undefined)) {
       
       const startTime = start_at ? new Date(start_at) : new Date(existingWindow.start_at)
-      let endTime = end_at ? new Date(end_at) : new Date()
-      
-      if (start_at !== undefined && end_at === undefined) {
-        // If only updating start_at, we need to get the current end_at
-        const { data: currentWindow } = await supabase
-          .from('availability_windows')
-          .select('end_at')
-          .eq('id', id)
-          .single()
-        if (currentWindow) {
-          endTime = new Date(currentWindow.end_at)
-        }
-      } else if (end_at !== undefined && start_at === undefined) {
-        // If only updating end_at, start_at is from existing window
-        endTime = new Date(end_at)
-      }
+      const endTime = end_at ? new Date(end_at) : new Date(existingWindow.end_at)
 
       if (startTime >= endTime) {
         return NextResponse.json({ error: 'Start time must be before end time' }, { status: 400 })
@@ -187,7 +152,7 @@ export async function PUT(
       updateData.notes = notes || null
     }
 
-    // Perform the update
+    // Perform the update - RLS will handle authorization
     const { data: updatedWindow, error: updateError } = await supabase
       .from('availability_windows')
       .update(updateData)
@@ -197,6 +162,10 @@ export async function PUT(
 
     if (updateError) {
       console.error('Error updating availability window:', updateError)
+      // Check if it's an RLS error
+      if (updateError.code === 'PGRST301' || updateError.message?.includes('security')) {
+        return NextResponse.json({ error: 'Unauthorized to update this window' }, { status: 403 })
+      }
       return NextResponse.json({ error: updateError.message || 'Failed to update availability window' }, { status: 500 })
     }
 
@@ -223,46 +192,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's expert profile
-    const { data: userProfile } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
+    // Check if there are any confirmed bookings for this availability window
+    const { data: existingBookings, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('id, status')
+      .eq('availability_window_id', id)
+      .in('status', ['confirmed', 'pending'])
 
-    if (!userProfile) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    if (bookingsError) {
+      console.error('Error checking existing bookings:', bookingsError)
+      return NextResponse.json({ error: 'Failed to check existing bookings' }, { status: 500 })
     }
 
-    const { data: expertProfile } = await supabase
-      .from('expert_profiles')
-      .select('id')
-      .eq('user_profile_id', userProfile.id)
-      .single()
-
-    if (!expertProfile) {
-      return NextResponse.json({ error: 'Expert profile not found' }, { status: 404 })
+    if (existingBookings && existingBookings.length > 0) {
+      return NextResponse.json({ 
+        error: 'Cannot delete availability window with confirmed or pending bookings. Please cancel the bookings first.' 
+      }, { status: 409 })
     }
 
-    // Verify the availability window belongs to this expert
-    const { data: existingWindow, error: fetchError } = await supabase
-      .from('availability_windows')
-      .select('expert_id')
-      .eq('id', id)
-      .single()
-
-    if (fetchError || !existingWindow) {
-      return NextResponse.json({ error: 'Availability window not found' }, { status: 404 })
-    }
-
-    if (existingWindow.expert_id !== expertProfile.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // TODO: In future, check if there are any confirmed bookings that would be affected
-    // For now, we'll allow deletion but this should be prevented if bookings exist
-
-    // Delete the availability window
+    // Delete the availability window - RLS will handle authorization
     const { error: deleteError } = await supabase
       .from('availability_windows')
       .delete()
@@ -270,6 +218,13 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting availability window:', deleteError)
+      // Check if it's an RLS error
+      if (deleteError.code === 'PGRST301' || deleteError.message?.includes('security')) {
+        return NextResponse.json({ error: 'Unauthorized to delete this window' }, { status: 403 })
+      }
+      if (deleteError.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Availability window not found' }, { status: 404 })
+      }
       return NextResponse.json({ error: 'Failed to delete availability window' }, { status: 500 })
     }
 

@@ -114,7 +114,15 @@ export function AvailabilityWindowForm({ onSubmit, isLoading = false }: Availabi
   }
 
   const convertToISOString = (date: string, time: string): string => {
-    return `${date}T${time}:00.000Z`
+    // Create a proper local datetime and convert to UTC
+    const localDateTime = new Date(`${date}T${time}:00`)
+    
+    // Validate the date is valid
+    if (isNaN(localDateTime.getTime())) {
+      throw new Error('Invalid date or time format')
+    }
+    
+    return localDateTime.toISOString()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,13 +132,13 @@ export function AvailabilityWindowForm({ onSubmit, isLoading = false }: Availabi
       return
     }
 
-    const requestData: CreateAvailabilityWindowRequest = {
-      start_at: convertToISOString(formData.date, formData.start_time),
-      end_at: convertToISOString(formData.date, formData.end_time),
-      notes: formData.notes || undefined
-    }
-
     try {
+      const requestData: CreateAvailabilityWindowRequest = {
+        start_at: convertToISOString(formData.date, formData.start_time),
+        end_at: convertToISOString(formData.date, formData.end_time),
+        notes: formData.notes || undefined
+      }
+
       await onSubmit(requestData)
       // Reset form on success
       setFormData({
@@ -142,8 +150,15 @@ export function AvailabilityWindowForm({ onSubmit, isLoading = false }: Availabi
       })
       setErrors({})
     } catch (error) {
+      // Handle date conversion errors
+      if (error instanceof Error && error.message.includes('Invalid date')) {
+        setErrors({ date: 'Invalid date or time format' })
+        return
+      }
+      
       // Error handling is done by parent component
       console.error('Form submission error:', error)
+      throw error // Re-throw so parent can handle it
     }
   }
 
