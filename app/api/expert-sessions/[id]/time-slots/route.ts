@@ -55,106 +55,43 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch session' }, { status: 500 })
     }
 
-    // Get availability windows for the expert in the date range
-    const { data: availabilityWindows, error: availabilityError } = await supabase
-      .from('availability_windows')
-      .select('id, start_at, end_at, is_closed')
-      .eq('expert_id', session.expert_id)
-      .eq('is_closed', false)
-      .gte('start_at', start.toISOString())
-      .lte('end_at', end.toISOString())
-      .order('start_at', { ascending: true })
+    // Note: Using pre-created slots instead of availability windows
 
-    if (availabilityError) {
-      console.error('Error fetching availability windows:', availabilityError)
-      return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
+    // Use pre-created slots from the slots table instead of generating them dynamically
+    const { data: timeSlots, error: slotsError } = await supabase
+      .from('slots')
+      .select('id, start_time, end_time, is_available, max_bookings, current_bookings')
+      .eq('expert_session_id', params.id)
+      .gte('start_time', start.toISOString())
+      .lte('start_time', end.toISOString())
+      .order('start_time', { ascending: true })
+
+    if (slotsError) {
+      console.error('Error fetching slots:', slotsError)
+      return NextResponse.json({ error: 'Failed to fetch time slots' }, { status: 500 })
     }
 
-    // Get existing bookings for this expert in the date range that would conflict
-    // For now, we'll assume no bookings exist since the bookings table isn't created yet
-    // TODO: Uncomment this when bookings table is implemented
-    const existingBookings: { start_at: string; end_at: string }[] = []
-    
-    /*
-    const { data: existingBookings, error: bookingsError } = await supabase
-      .from('bookings')
-      .select('start_at, end_at')
-      .eq('expert_id', session.expert_id)
-      .in('status', ['pending', 'awaiting_confirmation', 'confirmed'])
-      .gte('start_at', start.toISOString())
-      .lte('end_at', end.toISOString())
+    // Transform slots to match the expected format
+    const formattedSlots = (timeSlots || []).map(slot => ({
+      id: slot.id,
+      start_at: slot.start_time,
+      end_at: slot.end_time,
+      is_available: slot.is_available && slot.current_bookings < slot.max_bookings,
+      session_duration_minutes: session.duration_minutes,
+      bookings_remaining: slot.max_bookings - slot.current_bookings,
+    }))
 
-    if (bookingsError) {
-      console.error('Error fetching existing bookings:', bookingsError)
-      return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
-    }
-    */
-
-    // Generate time slots
-    const timeSlots = []
-    const sessionDurationMs = session.duration_minutes * 60 * 1000
-    const slotIncrementMs = 15 * 60 * 1000 // 15-minute increments
-    
-    // Business rules
-    const minLeadTimeMs = 2 * 60 * 60 * 1000 // 2 hours minimum lead time
-    const maxFutureDays = 90 // 90 days maximum booking horizon
+    // Apply business rules filtering
     const now = new Date()
-    const minStartTime = new Date(now.getTime() + minLeadTimeMs)
-    const maxEndTime = new Date(now.getTime() + maxFutureDays * 24 * 60 * 60 * 1000)
-
-    // Process each availability window
-    for (const window of availabilityWindows || []) {
-      const windowStart = new Date(window.start_at)
-      const windowEnd = new Date(window.end_at)
-
-      // Ensure window is within our booking constraints
-      const effectiveStart = new Date(Math.max(windowStart.getTime(), minStartTime.getTime()))
-      const effectiveEnd = new Date(Math.min(windowEnd.getTime(), maxEndTime.getTime()))
-
-      // Skip if effective window is too small for session
-      if (effectiveEnd.getTime() - effectiveStart.getTime() < sessionDurationMs) {
-        continue
-      }
-
-      // Align start time to 15-minute boundary
-      const alignedStartMs = Math.ceil(effectiveStart.getTime() / slotIncrementMs) * slotIncrementMs
-      const alignedStart = new Date(alignedStartMs)
-
-      // Generate slots within this window
-      let slotStart = alignedStart
-      
-      while (slotStart.getTime() + sessionDurationMs <= effectiveEnd.getTime()) {
-        const slotEnd = new Date(slotStart.getTime() + sessionDurationMs)
-
-        // Check if this slot conflicts with existing bookings
-        // Since existingBookings is empty for now, all slots are available
-        const hasConflict = existingBookings.some(booking => {
-          const bookingStart = new Date(booking.start_at)
-          const bookingEnd = new Date(booking.end_at)
-          
-          // Check for any overlap
-          return slotStart < bookingEnd && slotEnd > bookingStart
-        })
-
-        // Add the slot
-        timeSlots.push({
-          start_at: slotStart.toISOString(),
-          end_at: slotEnd.toISOString(),
-          is_available: !hasConflict,
-          availability_window_id: window.id,
-          session_duration_minutes: session.duration_minutes,
-        })
-
-        // Move to next 15-minute increment
-        slotStart = new Date(slotStart.getTime() + slotIncrementMs)
-      }
-    }
-
-    // Sort slots by start time
-    timeSlots.sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+    const minStartTime = new Date(now.getTime() + 2 * 60 * 60 * 1000) // 2 hours minimum lead time
+    
+    const availableSlots = formattedSlots.filter(slot => {
+      const slotStart = new Date(slot.start_at)
+      return slotStart > minStartTime // Only show slots that meet minimum lead time
+    })
 
     // Limit results to avoid huge responses (max 200 slots)
-    const limitedSlots = timeSlots.slice(0, 200)
+    const limitedSlots = availableSlots.slice(0, 200)
 
     return NextResponse.json({
       session: {
@@ -174,7 +111,6 @@ export async function GET(
       },
       constraints: {
         min_lead_time_hours: 2,
-        max_booking_days_ahead: maxFutureDays,
         slot_increment_minutes: 15,
       }
     })

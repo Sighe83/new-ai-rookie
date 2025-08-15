@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from '@/components/ui'
 import { TimeSlotPicker } from '@/components/TimeSlotPicker'
+import PaymentForm from '@/components/payment/PaymentForm'
+import StripeProvider from '@/components/providers/StripeProvider'
 import { ArrowLeftIcon, CheckCircleIcon, ClockIcon, DollarSignIcon, UserIcon, BookOpenIcon, StarIcon } from 'lucide-react'
 import { ExpertSessionWithAvailability, formatSessionPrice } from '@/types/expert-sessions'
 
@@ -35,7 +37,8 @@ export default function BookSessionPage({
   const [session, setSession] = useState<ExpertSessionWithAvailability | null>(null)
   const [expert, setExpert] = useState<ExpertProfile | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
-  const [step, setStep] = useState<'select-time' | 'confirm'>('select-time')
+  const [step, setStep] = useState<'select-time' | 'confirm' | 'payment' | 'success'>('select-time')
+  const [bookingId, setBookingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
@@ -164,19 +167,61 @@ export default function BookSessionPage({
     setStep('select-time')
   }
 
-  const handleConfirmBooking = () => {
-    // This is where we'll stop for this milestone
-    // In the next milestone, this will trigger the payment flow
-    console.log('Ready to book:', {
-      sessionId: session?.id,
-      expertId: session?.expert_id,
-      slot: selectedSlot,
-      price: session?.price_amount,
-      currency: session?.currency
-    })
-    
-    // For now, just show a confirmation message
-    alert('Booking flow ready! Next step: Payment integration')
+  const handleConfirmBooking = async () => {
+    if (!session || !selectedSlot) return
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Get current session for authentication
+      const { data: { session: authSession } } = await supabase.auth.getSession()
+      
+      if (!authSession?.access_token) {
+        throw new Error('Authentication required')
+      }
+
+      // Create booking in pending state
+      const response = await fetch('/api/bookings/create', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authSession.access_token}`
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          expert_id: session.expert_id,
+          start_at: selectedSlot.start_at,
+          end_at: selectedSlot.end_at,
+          availability_window_id: selectedSlot.availability_window_id,
+          amount: session.price_amount,
+          currency: session.currency
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create booking')
+      }
+
+      setBookingId(data.booking.id)
+      setStep('payment')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create booking')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePaymentSuccess = (paymentIntentId: string) => {
+    console.log('Payment successful:', paymentIntentId)
+    setStep('success')
+  }
+
+  const handlePaymentError = (error: string) => {
+    setError(error)
+    console.error('Payment error:', error)
   }
 
   const formatDateTime = (dateStr: string) => {
@@ -311,7 +356,7 @@ export default function BookSessionPage({
             </Card>
           </div>
 
-          {/* Time Selection or Confirmation */}
+          {/* Time Selection, Confirmation, Payment, or Success */}
           <div className="md:col-span-2">
             {step === 'select-time' ? (
               <TimeSlotPicker
@@ -320,6 +365,68 @@ export default function BookSessionPage({
                 onSlotSelected={handleSlotSelected}
                 selectedSlot={selectedSlot}
               />
+            ) : step === 'payment' ? (
+              <StripeProvider>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Complete Payment</CardTitle>
+                    <CardDescription>
+                      Secure payment for your session with {expert.full_name}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {error && (
+                      <div className="bg-error-bg border border-error-text/20 rounded-lg p-4 mb-4">
+                        <p className="text-error-text text-sm">{error}</p>
+                      </div>
+                    )}
+                    <PaymentForm
+                      amount={session.price_amount}
+                      bookingId={bookingId!}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                    />
+                  </CardContent>
+                </Card>
+              </StripeProvider>
+            ) : step === 'success' ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-success-text">
+                    <CheckCircleIcon className="w-5 h-5" />
+                    Payment Successful!
+                  </CardTitle>
+                  <CardDescription>
+                    Your booking has been confirmed and the expert has been notified.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-success-bg rounded-lg p-4">
+                    <h3 className="font-semibold text-success-text mb-2">Next Steps:</h3>
+                    <ul className="text-sm text-success-text space-y-1">
+                      <li>• The expert will confirm your booking within 24 hours</li>
+                      <li>• You&apos;ll receive an email with session details once confirmed</li>
+                      <li>• Payment will be captured after expert confirmation</li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="primary" 
+                      onClick={() => router.push('/dashboard/learner/bookings')}
+                      className="flex-1"
+                    >
+                      View My Bookings
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      onClick={() => router.push('/dashboard/learner/experts')}
+                      className="flex-1"
+                    >
+                      Book Another Session
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-4">
                 {/* Booking Summary */}
