@@ -43,7 +43,7 @@ export async function GET(
 
     // Get the expert session to validate it exists and get duration
     const { data: session, error: sessionError } = await supabase
-      .from('expert_sessions')
+      .from('sessions')
       .select('id, expert_id, duration_minutes, title')
       .eq('id', params.id)
       .eq('is_active', true)
@@ -56,28 +56,29 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch session' }, { status: 500 })
     }
 
-    // Note: Using pre-created slots instead of availability windows
+    // Note: Using pre-created bookable_slots instead of availability windows
 
-    // Use pre-created slots from the slots table instead of generating them dynamically
+    // Use pre-created bookable_slots from the bookable_slots table instead of generating them dynamically
     const { data: timeSlots, error: slotsError } = await supabase
-      .from('slots')
-      .select('id, start_time, end_time, is_available, max_bookings, current_bookings')
-      .eq('expert_session_id', params.id)
+      .from('bookable_slots')
+      .select('id, start_time, end_time, is_available, max_bookings, current_bookings, availability_window_id')
+      .eq('session_id', params.id)
       .gte('start_time', start.toISOString())
       .lte('start_time', end.toISOString())
       .order('start_time', { ascending: true })
 
     if (slotsError) {
-      console.error('Error fetching slots:', slotsError)
+      console.error('Error fetching bookable_slots:', slotsError)
       return NextResponse.json({ error: 'Failed to fetch time slots' }, { status: 500 })
     }
 
-    // Transform slots to match the expected format
+    // Transform bookable_slots to match the expected frontend format
     const formattedSlots = (timeSlots || []).map(slot => ({
       id: slot.id,
       start_at: slot.start_time,
       end_at: slot.end_time,
       is_available: slot.is_available && slot.current_bookings < slot.max_bookings,
+      availability_window_id: slot.availability_window_id,
       session_duration_minutes: session.duration_minutes,
       bookings_remaining: slot.max_bookings - slot.current_bookings,
     }))

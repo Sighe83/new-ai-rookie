@@ -410,9 +410,9 @@ export default function AdminDashboard() {
                             <span className="font-medium">Company:</span> {expert.expert_profile[0].company}
                           </p>
                         )}
-                        {expert.expert_profile[0].hourly_rate && (
+                        {expert.expert_profile[0].hourly_rate_cents && (
                           <p className="text-sm">
-                            <span className="font-medium">Rate:</span> ${expert.expert_profile[0].hourly_rate}/hr
+                            <span className="font-medium">Rate:</span> ${(expert.expert_profile[0].hourly_rate_cents / 100).toFixed(2)}/hr
                           </p>
                         )}
                         {expert.expert_profile[0].expertise_areas && expert.expert_profile[0].expertise_areas.length > 0 && (

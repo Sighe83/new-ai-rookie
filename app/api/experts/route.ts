@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         id,
         expertise_areas,
         bio,
-        hourly_rate,
+        hourly_rate_cents,
         rating,
         total_sessions,
         user_profiles!inner(
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // Get active sessions for all experts
     const { data: sessions, error: sessionsError } = await supabaseAdmin
-      .from('expert_sessions')
+      .from('sessions')
       .select(`
         id,
         expert_id,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         short_description,
         topic_tags,
         duration_minutes,
-        price_amount,
+        price_cents,
         currency,
         level,
         created_at

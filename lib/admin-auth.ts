@@ -47,6 +47,59 @@ const supabaseAdmin = createClient(
   }
 )
 
+export async function createAdminUser(
+  email: string,
+  password: string,
+  adminData: {
+    first_name?: string
+    last_name?: string
+    display_name?: string
+  } = {}
+) {
+  try {
+    // Create auth user using admin client
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        role: 'admin',
+        display_name: adminData.display_name || adminData.first_name || email.split('@')[0]
+      }
+    })
+
+    if (authError || !authData.user) {
+      throw authError || new Error('Failed to create admin user')
+    }
+
+    // Create user profile with admin role
+    const { data: profileData, error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .insert({
+        user_id: authData.user.id,
+        email,
+        role: 'admin',
+        first_name: adminData.first_name,
+        last_name: adminData.last_name,
+        display_name: adminData.display_name || adminData.first_name || email.split('@')[0],
+      })
+      .select()
+      .single()
+
+    if (profileError || !profileData) {
+      throw profileError || new Error('Failed to create admin user profile')
+    }
+
+    return {
+      user: authData.user,
+      profile: profileData
+    }
+  } catch (error) {
+    console.error('Error creating admin user:', error)
+    throw error
+  }
+}
+
 export async function createExpertUser(
   email: string,
   password: string,

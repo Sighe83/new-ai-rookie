@@ -69,11 +69,9 @@ export async function POST(request: NextRequest) {
     const { data: bookingData, error: bookingError } = await supabase
       .from('bookings')
       .insert({
-        learner_id: learnerProfile.id,
-        student_id: userProfile.id, 
+        learner_id: learnerProfile.id, 
         expert_id: finalExpertId,
-        expert_session_id: finalSessionId, // REQUIRED field!
-        session_id: finalSessionId, // For compatibility
+        session_id: finalSessionId, // Consolidated schema uses session_id
         start_at: finalStartAt, // REQUIRED for availability window validation
         end_at: finalEndAt, // REQUIRED for availability window validation
         scheduled_at: finalStartAt,

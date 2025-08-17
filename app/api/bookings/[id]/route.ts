@@ -15,32 +15,12 @@ export async function GET(
 
     const { id: bookingId } = await params;
 
+    // Use the booking_details view for consolidated data
     const { data: booking, error: bookingError } = await supabase
-      .from('bookings')
-      .select(`
-        *,
-        slots (
-          *,
-          expert_sessions (
-            *,
-            experts:profiles!expert_sessions_expert_id_fkey (
-              id,
-              email,
-              full_name,
-              avatar_url,
-              bio
-            )
-          )
-        ),
-        student:profiles!bookings_student_id_fkey (
-          id,
-          email,
-          full_name,
-          avatar_url
-        )
-      `)
+      .from('booking_details')
+      .select('*')
       .eq('id', bookingId)
-      .or(`student_id.eq.${user.id},expert_id.eq.${user.id}`)
+      .or(`learner_id.eq.${user.id},expert_id.eq.${user.id}`)
       .single();
 
     if (bookingError || !booking) {
@@ -50,7 +30,7 @@ export async function GET(
       );
     }
 
-    const isStudent = booking.student_id === user.id;
+    const isStudent = booking.learner_id === user.id;
     const isExpert = booking.expert_id === user.id;
 
     const formattedBooking = {
@@ -58,37 +38,32 @@ export async function GET(
       status: booking.status,
       paymentStatus: booking.payment_status,
       scheduledAt: booking.scheduled_at,
-      duration: booking.slots?.expert_sessions?.duration || 60,
+      duration: booking.duration_minutes,
       price: booking.amount_authorized,
       currency: booking.currency,
-      notes: booking.notes,
+      notes: booking.learner_notes,
       createdAt: booking.created_at,
       updatedAt: booking.updated_at,
       role: isStudent ? 'student' : 'expert',
       session: {
-        id: booking.slots?.expert_sessions?.id,
-        title: booking.slots?.expert_sessions?.title,
-        description: booking.slots?.expert_sessions?.description,
-        type: booking.slots?.expert_sessions?.type,
-        maxStudents: booking.slots?.expert_sessions?.max_students,
+        id: booking.session_id,
+        title: booking.session_title,
+        description: booking.session_description,
+        duration: booking.duration_minutes,
       },
       expert: isStudent ? {
-        id: booking.slots?.expert_sessions?.experts?.id,
-        name: booking.slots?.expert_sessions?.experts?.full_name,
-        email: booking.slots?.expert_sessions?.experts?.email,
-        avatar: booking.slots?.expert_sessions?.experts?.avatar_url,
-        bio: booking.slots?.expert_sessions?.experts?.bio,
+        id: booking.expert_id,
+        name: booking.expert_name,
+        bio: booking.expert_bio,
       } : undefined,
       student: isExpert ? {
-        id: booking.student?.id,
-        name: booking.student?.full_name,
-        email: booking.student?.email,
-        avatar: booking.student?.avatar_url,
+        id: booking.learner_id,
+        name: booking.learner_name,
       } : undefined,
       slot: {
-        id: booking.slots?.id,
-        startTime: booking.slots?.start_time,
-        endTime: booking.slots?.end_time,
+        id: booking.slot_id,
+        startTime: booking.slot_start_time,
+        endTime: booking.slot_end_time,
       },
       payment: {
         stripePaymentIntentId: booking.stripe_payment_intent_id,
@@ -134,7 +109,7 @@ export async function PATCH(
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
-      .eq('student_id', user.id)
+      .eq('learner_id', user.id)
       .single();
 
     if (bookingError || !booking) {

@@ -13,32 +13,22 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { 
-      session_id, 
-      expert_id, 
-      start_at, 
-      end_at, 
-      availability_window_id, 
-      amount, 
-      currency = 'USD'
+      slot_id, 
+      notes
     } = body;
 
-    if (!session_id || !expert_id || !start_at || !end_at || !amount) {
+    if (!slot_id) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing slot_id' },
         { status: 400 }
       );
     }
 
-    // Create booking and payment intent in a transaction
-    const { data: bookingResult, error: bookingError } = await supabase.rpc('create_transactional_booking', {
-      p_learner_id: user.id,
-      p_expert_id: expert_id,
-      p_session_id: session_id,
-      p_start_at: start_at,
-      p_end_at: end_at,
-      p_availability_window_id: availability_window_id,
-      p_amount: amount,
-      p_currency: currency
+    // Create booking using the consolidated function
+    const { data: bookingResult, error: bookingError } = await supabase.rpc('create_booking_with_payment', {
+      p_learner_user_id: user.id,
+      p_slot_id: slot_id,
+      p_notes: notes || null
     });
 
     if (bookingError || !bookingResult || bookingResult.length === 0) {
@@ -53,12 +43,12 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: currency.toLowerCase(),
+      amount: booking.amount_cents, // Amount already in cents
+      currency: booking.currency.toLowerCase(),
       metadata: {
-        booking_id: booking.id,
-        session_id: session_id,
-        expert_id: expert_id,
+        booking_id: booking.booking_id,
+        session_id: booking.session_id,
+        expert_id: booking.expert_id,
         learner_id: user.id
       },
       capture_method: 'manual', // Don't capture until expert confirms
@@ -69,9 +59,9 @@ export async function POST(request: NextRequest) {
       .from('bookings')
       .update({ 
         stripe_payment_intent_id: paymentIntent.id,
-        status: 'pending_payment'
+        payment_status: 'authorized'
       })
-      .eq('id', booking.id);
+      .eq('id', booking.booking_id);
 
     if (updateError) {
       console.error('Failed to update booking with payment intent:', updateError);

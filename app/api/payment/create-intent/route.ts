@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: booking, error: bookingError } = await supabase
-      .from('bookings')
-      .select('*, slots(*, experts(*))')
+      .from('booking_details')
+      .select('*')
       .eq('id', bookingId)
-      .eq('student_id', user.id)
+      .eq('learner_id', user.id)
       .single();
 
     if (bookingError || !booking) {
@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
       metadata: {
         bookingId: bookingId,
         studentId: user.id,
-        expertId: booking.slots?.experts?.id || '',
+        expertId: booking.expert_id || '',
         idempotencyKey: idempotencyKey,
       },
-      description: `Booking for AI tutoring session with ${booking.slots?.experts?.name || 'expert'}`,
+      description: `Booking for AI tutoring session with ${booking.expert_name || 'expert'}`,
     }, {
       idempotencyKey: idempotencyKey,
     });

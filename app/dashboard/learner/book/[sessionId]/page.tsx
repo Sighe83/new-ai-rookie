@@ -54,7 +54,7 @@ export default function BookSessionPage({
     try {
       // Get the session details
       const { data: sessionData, error: sessionError } = await supabase
-        .from('expert_sessions')
+        .from('sessions')
         .select('*')
         .eq('id', resolvedParams.sessionId)
         .eq('is_active', true)
@@ -73,9 +73,15 @@ export default function BookSessionPage({
         throw new Error('Session not found')
       }
 
+      // Transform the session data to match expected interface (map price_cents to price_amount)
+      const transformedSession = {
+        ...sessionData,
+        price_amount: sessionData.price_cents // Map database field to interface field
+      }
+
       // Create a default expert profile - we'll try to get real data but won't fail if it doesn't work
       let expertProfile: ExpertProfile = {
-        id: sessionData.expert_id,
+        id: transformedSession.expert_id,
         full_name: 'AI Expert',
         bio: 'Experienced AI professional ready to help you master AI skills.',
         avatar_url: undefined,
@@ -100,13 +106,13 @@ export default function BookSessionPage({
               avatar_url
             )
           `)
-          .eq('id', sessionData.expert_id)
+          .eq('id', transformedSession.expert_id)
           .maybeSingle()
 
         if (expertError) {
           console.error('Database error fetching expert profile:', {
             error: expertError,
-            expert_id: sessionData.expert_id,
+            expert_id: transformedSession.expert_id,
             timestamp: new Date().toISOString()
           })
         } else if (expertData && expertData.user_profiles) {
@@ -128,14 +134,14 @@ export default function BookSessionPage({
       } catch (profileError) {
         console.error('Expert profile query failed, using defaults:', {
           error: profileError,
-          expert_id: sessionData.expert_id,
+          expert_id: transformedSession.expert_id,
           error_message: profileError instanceof Error ? profileError.message : 'Unknown profile error',
           timestamp: new Date().toISOString()
         })
       }
 
       setSession({
-        ...sessionData,
+        ...transformedSession,
         has_availability: true,
         expert_display_name: expertProfile.full_name,
         expert_bio: expertProfile.bio,

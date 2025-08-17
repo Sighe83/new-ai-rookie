@@ -16,7 +16,7 @@ export async function GET(
     }
 
     const { data: session, error } = await supabase
-      .from('expert_sessions')
+      .from('sessions')
       .select(`
         id,
         expert_id,
@@ -24,7 +24,7 @@ export async function GET(
         short_description,
         topic_tags,
         duration_minutes,
-        price_amount,
+        price_cents,
         currency,
         level,
         prerequisites,
@@ -92,8 +92,8 @@ export async function PUT(
 
     // Get existing session for validation purposes only
     const { data: existingSession, error: sessionError } = await supabase
-      .from('expert_sessions')
-      .select('price_amount, duration_minutes, currency')
+      .from('sessions')
+      .select('price_cents, duration_minutes, currency')
       .eq('id', params.id)
       .single()
 
@@ -158,7 +158,7 @@ export async function PUT(
       if (!body.price_amount || body.price_amount < 0) {
         return NextResponse.json({ error: 'Price must be a positive number' }, { status: 400 })
       }
-      updates.price_amount = body.price_amount
+      updates.price_cents = body.price_amount
     }
 
     if (body.currency !== undefined) {
@@ -169,7 +169,7 @@ export async function PUT(
     }
 
     // Validate minimum hourly rate for DKK if both price and duration are being updated
-    const finalPriceAmount = updates.price_amount || existingSession.price_amount
+    const finalPriceAmount = updates.price_cents || existingSession.price_cents
     const finalDurationMinutes = updates.duration_minutes || existingSession.duration_minutes
     const finalCurrency = updates.currency || existingSession.currency
 
@@ -209,7 +209,7 @@ export async function PUT(
 
     // Update the session - RLS will handle authorization
     const { data: updatedSession, error: updateError } = await supabase
-      .from('expert_sessions')
+      .from('sessions')
       .update(updates)
       .eq('id', params.id)
       .select(`
@@ -219,7 +219,7 @@ export async function PUT(
         short_description,
         topic_tags,
         duration_minutes,
-        price_amount,
+        price_cents,
         currency,
         level,
         prerequisites,
@@ -267,7 +267,7 @@ export async function DELETE(
     const { data: activeBookings, error: bookingsError } = await supabase
       .from('bookings')
       .select('id')
-      .eq('expert_session_id', params.id)
+      .eq('session_id', params.id)
       .in('status', ['pending', 'awaiting_confirmation', 'confirmed'])
       .limit(1)
 
@@ -285,7 +285,7 @@ export async function DELETE(
     // Soft delete - set is_active to false instead of actually deleting
     // RLS will handle authorization
     const { error: deleteError } = await supabase
-      .from('expert_sessions')
+      .from('sessions')
       .update({ is_active: false })
       .eq('id', params.id)
 

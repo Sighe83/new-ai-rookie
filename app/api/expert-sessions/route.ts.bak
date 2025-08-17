@@ -168,7 +168,6 @@ export async function GET(request: NextRequest) {
       
       return {
         ...session,
-        price_amount: session.price_cents, // Map price_cents to price_amount for API consistency
         expert_display_name: userProfile.display_name,
         expert_bio: expertProfile.bio,
         expert_rating: expertProfile.rating,
@@ -353,7 +352,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       message: 'Session created successfully',
-      session: { ...newSession, price_amount: newSession.price_cents } 
+      session: newSession 
     }, { status: 201 })
 
   } catch (error) {

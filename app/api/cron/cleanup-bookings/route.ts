@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         // Release the slot
         if (booking.slot_id) {
           const { error: slotError } = await supabase
-            .from('slots')
+            .from('bookable_slots')
             .update({
               is_available: true,
               current_bookings: 0, // Reset to 0 for simplicity

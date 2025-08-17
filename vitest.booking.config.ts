@@ -125,7 +125,7 @@ export default defineConfig({
     // Benchmark configuration
     benchmark: {
       outputFile: './test-results/benchmark.json',
-      reporters: ['json', 'default']
+      reporters: ['default']
     }
   },
   

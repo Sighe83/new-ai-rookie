@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
                   .from('bookings')
                   .update({
                     payment_status: 'captured',
-                    amount_captured: charge.amount / 100,
+                    amount_captured: charge.amount, // Store in cents
                     updated_at: new Date().toISOString(),
                   })
                   .eq('stripe_payment_intent_id', paymentIntentId);
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
                 .from('bookings')
                 .update({
                   payment_status: 'refunded',
-                  amount_refunded: charge.amount_refunded / 100,
+                  amount_refunded: charge.amount_refunded, // Store in cents
                   updated_at: new Date().toISOString(),
                 })
                 .eq('stripe_payment_intent_id', paymentIntentId);

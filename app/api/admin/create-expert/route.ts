@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         company,
         years_of_experience: years_of_experience ? parseInt(years_of_experience) : null,
         expertise_areas: expertiseAreasArray,
-        hourly_rate: hourly_rate ? parseFloat(hourly_rate) : null,
+        hourly_rate_cents: hourly_rate ? Math.round(parseFloat(hourly_rate) * 100) : null,
         linkedin_url,
         github_url,
         website_url,
