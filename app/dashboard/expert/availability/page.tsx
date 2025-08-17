@@ -81,14 +81,12 @@ export default function ExpertAvailabilityPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        throw new Error('No access token')
+      if (!session) {
+        throw new Error('No session')
       }
 
       const response = await fetch('/api/availability-windows?include_all=true', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -110,15 +108,15 @@ export default function ExpertAvailabilityPage() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('No access token')
+      if (!session) {
+        throw new Error('No session')
       }
 
       const response = await fetch('/api/availability-windows', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       })
@@ -141,15 +139,13 @@ export default function ExpertAvailabilityPage() {
   const handleDeleteWindow = async (id: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('No access token')
+      if (!session) {
+        throw new Error('No session')
       }
 
       const response = await fetch(`/api/availability-windows/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -167,15 +163,15 @@ export default function ExpertAvailabilityPage() {
   const handleToggleStatus = async (id: string, isClosed: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('No access token')
+      if (!session) {
+        throw new Error('No session')
       }
 
       const response = await fetch(`/api/availability-windows/${id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ is_closed: isClosed })
       })

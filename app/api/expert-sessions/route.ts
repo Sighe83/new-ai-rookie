@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { createServerSideClient } from '@/lib/supabase-server'
 import { CreateExpertSessionRequest, ExpertSessionFilters, SessionLevel } from '@/types/expert-sessions'
 
 export async function GET(request: NextRequest) {
@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
       has_availability_only: searchParams.get('has_availability_only') === 'true',
     }
     
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -201,7 +202,8 @@ export async function POST(request: NextRequest) {
       materials_url 
     } = body
 
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

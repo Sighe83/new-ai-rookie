@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { createServerSideClient } from '@/lib/supabase-server'
 import { UpdateExpertSessionRequest } from '@/types/expert-sessions'
 
 export async function GET(
@@ -8,7 +8,8 @@ export async function GET(
 ) {
   const params = await context.params
   try {
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -82,7 +83,8 @@ export async function PUT(
   try {
     const body: UpdateExpertSessionRequest = await request.json()
     
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -254,7 +256,8 @@ export async function DELETE(
 ) {
   const params = await context.params
   try {
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

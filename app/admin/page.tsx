@@ -70,9 +70,9 @@ export default function AdminDashboard() {
             // Use admin API to get user auth details
             const response = await fetch('/api/admin/get-user-auth', {
               method: 'POST',
+              credentials: 'include',
               headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
+                'Content-Type': 'application/json'
               },
               body: JSON.stringify({ user_id: expert.user_id })
             })
@@ -121,9 +121,9 @@ export default function AdminDashboard() {
       // Call the API route to create expert
       const response = await fetch('/api/admin/create-expert', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       })
@@ -190,9 +190,9 @@ export default function AdminDashboard() {
 
       const response = await fetch('/api/admin/resend-verification', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ email })
       })

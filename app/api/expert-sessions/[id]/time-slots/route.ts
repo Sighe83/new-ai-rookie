@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { createServerSideClient } from '@/lib/supabase-server'
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,8 @@ export async function GET(
     const startDate = searchParams.get('start_date') // YYYY-MM-DD
     const endDate = searchParams.get('end_date') // YYYY-MM-DD (optional, defaults to 7 days from start)
     
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

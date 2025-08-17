@@ -1,9 +1,9 @@
-import { createClient, User } from '@supabase/supabase-js'
+import { createBrowserClient, User } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 export type UserRole = 'learner' | 'expert' | 'admin'
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth-helpers'
+import { createServerSideClient } from '@/lib/supabase-server'
 import { CreateAvailabilityWindowRequest } from '@/types/availability'
 
 export async function GET(request: NextRequest) {
@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
     const expertId = searchParams.get('expert_id')
     const includeAll = searchParams.get('include_all') === 'true'
     
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
     const body: CreateAvailabilityWindowRequest = await request.json()
     const { start_at, end_at, notes } = body
 
-    const { user, userError, supabase } = await getAuthenticatedUser(request)
+    const supabase = await createServerSideClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

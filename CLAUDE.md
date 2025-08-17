@@ -69,3 +69,79 @@ lib/
 types/
   design-system.ts  # Type definitions
 ```
+
+# Authentication Architecture
+
+## Server-Side Cookie Authentication (Supabase SSR)
+
+This project uses **server-side cookie authentication** with Supabase's SSR package for security and consistency.
+
+### Authentication Pattern
+
+**IMPORTANT:** Only use the approved authentication pattern. No other auth methods are permitted without permission.
+
+```typescript
+// API Route Authentication (REQUIRED PATTERN)
+import { createServerSideClient } from '@/lib/supabase-server'
+
+export async function GET(request: NextRequest) {
+  const supabase = await createServerSideClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  // Use supabase client with authenticated user context
+}
+```
+
+```typescript
+// Client-Side Authentication (REQUIRED PATTERN)
+import { supabase } from '@/lib/supabase' // Uses createBrowserClient from @supabase/ssr
+
+// Login
+const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+// Get current user
+const { data: { user } } = await supabase.auth.getUser()
+
+// API calls automatically include cookies
+const response = await fetch('/api/endpoint', {
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' }
+})
+```
+
+### Key Features
+
+1. **Security**: HttpOnly cookies prevent XSS attacks
+2. **Automatic**: Session management and refresh handled by middleware
+3. **Consistent**: Single auth pattern across client and server
+4. **SSR Support**: Works seamlessly with Server Components
+5. **Synchronized**: Client and server auth state automatically synced via cookies
+
+### Implementation Details
+
+- **Middleware**: `/middleware.ts` handles automatic session refresh
+- **Server Client**: `/lib/supabase-server.ts` provides authenticated Supabase client
+- **Browser Client**: `/lib/supabase.ts` uses `createBrowserClient` from `@supabase/ssr`
+- **No Bearer Tokens**: Authentication state managed via secure cookies
+- **RLS Enabled**: Database-level security with Row Level Security
+
+### Prohibited Patterns
+
+❌ **Do NOT use these patterns without permission:**
+- Bearer token authentication (`Authorization` headers)
+- Manual JWT handling
+- Custom authentication helpers
+- Multiple auth patterns in the same codebase
+
+### File Structure
+```
+middleware.ts           # Session refresh and cookie handling
+lib/
+  supabase-server.ts   # Server-side client factory
+  supabase.ts          # Client-side client
+app/api/               # All routes use createServerSideClient()
+```

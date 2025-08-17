@@ -56,15 +56,13 @@ export default function ExpertDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        console.error('No access token available')
+      if (!session) {
+        console.error('No session available')
         return
       }
 
       const response = await fetch('/api/availability-windows?include_all=true', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {

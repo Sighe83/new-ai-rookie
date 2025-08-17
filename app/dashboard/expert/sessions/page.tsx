@@ -77,15 +77,13 @@ export default function ExpertSessionsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        console.error('No access token available')
+      if (!session) {
+        console.error('No session available')
         return
       }
 
       const response = await fetch('/api/expert-sessions?my_sessions=true', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -108,15 +106,15 @@ export default function ExpertSessionsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        throw new Error('No access token available')
+      if (!session) {
+        throw new Error('No session available')
       }
 
       const response = await fetch('/api/expert-sessions', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(sessionData)
       })
@@ -160,15 +158,15 @@ export default function ExpertSessionsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        throw new Error('No access token available')
+      if (!session) {
+        throw new Error('No session available')
       }
 
       const response = await fetch(`/api/expert-sessions/${editingSession.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(sessionData)
       })
@@ -211,15 +209,15 @@ export default function ExpertSessionsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session?.access_token) {
-        throw new Error('No access token available')
+      if (!session) {
+        throw new Error('No session available')
       }
 
       const response = await fetch(`/api/expert-sessions/${sessionId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ is_active: isActive })
       })

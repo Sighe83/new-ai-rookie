@@ -62,13 +62,6 @@ export function TimeSlotPicker({
     setError(null)
     
     try {
-      // Get the current session for authentication
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session?.access_token) {
-        throw new Error('You must be logged in to view available time slots')
-      }
-      
       // Calculate date range (selected date + 6 more days)
       const startDate = new Date(selectedDate)
       startDate.setHours(0, 0, 0, 0)
@@ -79,11 +72,12 @@ export function TimeSlotPicker({
       const startStr = startDate.toISOString().split('T')[0]
       const endStr = endDate.toISOString().split('T')[0]
       
+      // Use cookie authentication (no Authorization header needed)
       const response = await fetch(
         `/api/expert-sessions/${sessionId}/time-slots?start_date=${startStr}&end_date=${endStr}`,
         {
+          credentials: 'include', // Include cookies for authentication
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
           }
         }

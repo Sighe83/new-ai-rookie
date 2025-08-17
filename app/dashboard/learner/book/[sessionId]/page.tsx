@@ -177,16 +177,16 @@ export default function BookSessionPage({
       // Get current session for authentication
       const { data: { session: authSession } } = await supabase.auth.getSession()
       
-      if (!authSession?.access_token) {
+      if (!authSession) {
         throw new Error('Authentication required')
       }
 
       // Create booking in pending state
       const response = await fetch('/api/bookings/create', {
         method: 'POST',
+        credentials: 'include', // Use cookie authentication
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authSession.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           session_id: session.id,
