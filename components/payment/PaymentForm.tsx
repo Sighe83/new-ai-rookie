@@ -8,9 +8,11 @@ import {
   CardElementProps
 } from '@stripe/react-stripe-js'
 import { Button } from '@/components/ui'
+import { formatSessionPrice } from '@/types/expert-sessions'
 
 interface PaymentFormProps {
   amount: number
+  currency?: 'DKK' | 'USD' | 'EUR'
   bookingId: string
   onSuccess: (paymentIntentId: string) => void
   onError: (error: string) => void
@@ -35,7 +37,7 @@ const CARD_ELEMENT_OPTIONS: CardElementProps['options'] = {
   hidePostalCode: false,
 }
 
-export default function PaymentForm({ amount, bookingId, onSuccess, onError }: PaymentFormProps) {
+export default function PaymentForm({ amount, currency = 'DKK', bookingId, onSuccess, onError }: PaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -62,18 +64,23 @@ export default function PaymentForm({ amount, bookingId, onSuccess, onError }: P
 
     try {
       // Create payment intent
-      const { data: paymentIntent, error: createError } = await fetch('/api/payment/create-intent', {
+      const response = await fetch('/api/payment/create-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ 
-          amount: amount * 100, // Convert to cents
+          amount: amount, // Amount already in cents from booking
+          currency: currency.toLowerCase(),
           bookingId 
         }),
-      }).then(res => res.json())
+      })
 
-      if (createError || !paymentIntent) {
-        throw new Error(createError?.message || 'Failed to create payment intent')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Network error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
+
+      const paymentIntent = await response.json()
 
       // Confirm payment
       const { error: stripeError, paymentIntent: confirmedPayment } = await stripe.confirmCardPayment(
@@ -89,7 +96,9 @@ export default function PaymentForm({ amount, bookingId, onSuccess, onError }: P
         throw new Error(stripeError.message || 'Payment failed')
       }
 
-      if (confirmedPayment?.status === 'succeeded') {
+      // Handle both automatic capture (succeeded) and manual capture (requires_capture)
+      if (confirmedPayment?.status === 'succeeded' || confirmedPayment?.status === 'requires_capture') {
+        // For manual capture, the payment is authorized and awaiting expert approval
         onSuccess(confirmedPayment.id)
       } else {
         throw new Error('Payment was not successful')
@@ -133,7 +142,7 @@ export default function PaymentForm({ amount, bookingId, onSuccess, onError }: P
           disabled={!stripe || loading}
           className="flex-1"
         >
-          {loading ? 'Processing...' : `Pay $${amount}`}
+          {loading ? 'Processing...' : `Pay ${formatSessionPrice(amount, currency)}`}
         </Button>
       </div>
 

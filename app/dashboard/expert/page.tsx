@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase, AppUser } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Badge } from '@/components/ui'
-import { CalendarIcon, UserIcon, TrendingUpIcon, DollarSignIcon, VideoIcon, MessageSquareIcon, StarIcon, CalendarDaysIcon } from 'lucide-react'
+import { CalendarIcon, UserIcon, TrendingUpIcon, DollarSignIcon, VideoIcon, MessageSquareIcon, StarIcon, CalendarDaysIcon, Clock } from 'lucide-react'
 
 interface Session {
   id: string
@@ -289,11 +289,20 @@ export default function ExpertDashboard() {
               <h1 className="text-xl font-bold text-text">AI Expert Hub</h1>
               <nav className="hidden md:flex space-x-6">
                 <a href="/dashboard/expert" className="text-primary font-medium">Dashboard</a>
+                <a href="/dashboard/expert/approvals" className="text-text-light hover:text-text">Approvals</a>
                 <a href="/dashboard/expert/sessions" className="text-text-light hover:text-text">My Sessions</a>
                 <a href="/dashboard/expert/availability" className="text-text-light hover:text-text">Availability</a>
               </nav>
             </div>
             <div className="flex items-center space-x-4">
+              <Button 
+                variant="primary" 
+                size="sm"
+                onClick={() => router.push('/dashboard/expert/approvals')}
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Approvals
+              </Button>
               <Button variant="secondary" size="sm">
                 <MessageSquareIcon className="w-4 h-4 mr-2" />
                 Messages

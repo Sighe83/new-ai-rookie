@@ -222,7 +222,8 @@ export default function BookSessionPage({
 
   const handlePaymentSuccess = (paymentIntentId: string) => {
     console.log('Payment successful:', paymentIntentId)
-    setStep('success')
+    // Redirect to My Bookings page since payment is authorized and awaiting expert approval
+    router.push('/dashboard/learner/bookings')
   }
 
   const handlePaymentError = (error: string) => {

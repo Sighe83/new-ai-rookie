@@ -85,7 +85,7 @@ async function setupExpertProfile() {
         topic_tags: ['API Testing', 'E2E Testing', 'JavaScript', 'Automation'],
         duration_minutes: 60,
         price_amount: 4500,
-        currency: 'USD',
+        currency: 'DKK',
         level: 'INTERMEDIATE',
         is_active: true
       })

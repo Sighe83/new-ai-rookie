@@ -146,7 +146,7 @@ describe('Performance and Load Tests', () => {
           body: JSON.stringify({
             bookingId: `booking-${i}`,
             amount: 50.00,
-            currency: 'usd'
+            currency: "dkk"'
           })
         })
 

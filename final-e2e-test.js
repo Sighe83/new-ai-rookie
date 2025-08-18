@@ -259,17 +259,17 @@ async function runFinalE2ETest() {
     const paymentTests = [
       {
         name: 'Missing fields',
-        data: { currency: 'usd' },
+        data: { currency: 'dkk' },
         expected: 400
       },
       {
         name: 'Invalid amount',
-        data: { bookingId: createdBookingId, amount: -100, currency: 'usd' },
+        data: { bookingId: createdBookingId, amount: -100, currency: 'dkk' },
         expected: 400
       },
       {
         name: 'Valid structure',
-        data: { bookingId: createdBookingId, amount: session.price_amount, currency: 'usd' },
+        data: { bookingId: createdBookingId, amount: session.price_amount, currency: 'dkk' },
         expected: [401, 200, 500] // May vary based on auth method
       }
     ]

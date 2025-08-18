@@ -98,7 +98,7 @@ describe('Booking System Integration Tests', () => {
           status: 'pending',
           payment_status: 'pending',
           amount_authorized: 50.00,
-          currency: 'usd',
+          currency: 'dkk',
           created_at: new Date().toISOString()
         }],
         error: null
@@ -183,7 +183,7 @@ describe('Booking System Integration Tests', () => {
         id: 'pi_test_payment_intent',
         client_secret: 'pi_test_client_secret',
         amount: 5000,
-        currency: 'usd'
+        currency: 'dkk'
       }
 
       // Mock booking lookup
@@ -209,7 +209,7 @@ describe('Booking System Integration Tests', () => {
         body: JSON.stringify({
           bookingId: testBookingId,
           amount: 50.00,
-          currency: 'usd'
+          currency: 'dkk'
         })
       })
 
@@ -222,7 +222,7 @@ describe('Booking System Integration Tests', () => {
       expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
         expect.objectContaining({
           amount: 5000,
-          currency: 'usd',
+          currency: 'dkk',
           capture_method: 'manual',
           metadata: expect.objectContaining({
             bookingId: testBookingId

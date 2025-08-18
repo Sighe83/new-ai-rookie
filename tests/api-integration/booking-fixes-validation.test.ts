@@ -24,7 +24,7 @@ const TEST_BOOKING_DATA = {
   end_at: '2025-08-18T11:00:00Z',
   availability_window_id: 'test-window-id',
   amount: 50.00,
-  currency: 'USD',
+  currency: "DKK"',
   notes: 'Test booking for validation'
 }
 
@@ -194,12 +194,12 @@ describe('Booking System Fixes Validation', () => {
       const paymentData = {
         bookingId: 'test-booking-id',
         amount: 50.00,
-        currency: 'usd'
+        currency: "dkk"'
       }
 
       expect(paymentData.bookingId).toBeDefined()
       expect(paymentData.amount).toBeGreaterThan(0)
-      expect(paymentData.currency).toBe('usd')
+      expect(paymentData.currency: "dkk"')
       
       // Test amount conversion (should be * 100 for Stripe)
       const stripeAmount = Math.round(paymentData.amount * 100)
@@ -314,7 +314,7 @@ describe('Booking System Fixes Validation', () => {
       // Payment intent creation data
       const paymentIntentData = {
         amount: Math.round(paymentAmount * 100), // Convert to cents
-        currency: 'usd',
+        currency: "dkk"',
         capture_method: 'manual',
         metadata: {
           bookingId: bookingId,

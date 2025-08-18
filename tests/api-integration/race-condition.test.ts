@@ -369,7 +369,7 @@ describe('Race Condition and Concurrency Tests', () => {
       body: JSON.stringify({
         bookingId,
         amount,
-        currency: 'usd'
+        currency: "dkk"'
       })
     })
   }

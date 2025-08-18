@@ -652,7 +652,7 @@ class StudentJourney {
         body: JSON.stringify({
           bookingId: this.bookingId,
           amount: this.session.pricePerSession,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
       

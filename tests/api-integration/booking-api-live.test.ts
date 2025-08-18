@@ -123,7 +123,7 @@ describe('Live API Integration Tests', () => {
         body: JSON.stringify({
           bookingId: 'test-booking-id',
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
 
@@ -142,7 +142,7 @@ describe('Live API Integration Tests', () => {
         },
         body: JSON.stringify({
           // Missing bookingId and amount
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
 
@@ -162,7 +162,7 @@ describe('Live API Integration Tests', () => {
         body: JSON.stringify({
           bookingId: 'non-existent-booking-id',
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
 
@@ -282,7 +282,7 @@ describe('Live API Integration Tests', () => {
         body: JSON.stringify({
           bookingId: 'test-booking-id',
           amount: 'not-a-number',
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
 

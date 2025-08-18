@@ -390,7 +390,7 @@ describe('API Endpoints Validation Tests', () => {
       const payload = {
         bookingId: context.testBookingId,
         amount: 50.00,
-        currency: 'usd'
+        currency: "dkk"'
       }
       
       const response = await createPaymentIntent(payload)

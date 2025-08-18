@@ -290,7 +290,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
           payload: {
             bookingId: 'test-booking',
             amount: 'invalid-amount',
-            currency: 'usd'
+            currency: "dkk"'
           },
           endpoint: '/api/payment/create-intent'
         },
@@ -369,7 +369,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
         body: JSON.stringify({
           bookingId: testBookingId,
           amount: -50.00, // Invalid negative amount
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
       
@@ -387,7 +387,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
         body: JSON.stringify({
           bookingId: 'non-existent-booking-id',
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
       
@@ -411,7 +411,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
         body: JSON.stringify({
           bookingId: testBookingId,
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
       
@@ -427,7 +427,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
         body: JSON.stringify({
           bookingId: testBookingId,
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
       })
       
@@ -778,7 +778,7 @@ describe('Comprehensive Error Scenarios and Failure Path Tests', () => {
           body: JSON.stringify({
             bookingId: bookingId,
             amount: 50.00,
-            currency: 'usd'
+            currency: "dkk"'
           })
         })
         

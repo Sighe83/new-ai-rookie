@@ -469,7 +469,7 @@ describe('Comprehensive Security Validation Tests', () => {
             body: JSON.stringify({
               bookingId: context.testBookingId,
               amount: amount,
-              currency: 'usd'
+              currency: "dkk"'
             })
           })
           
@@ -719,7 +719,7 @@ describe('Comprehensive Security Validation Tests', () => {
             body: JSON.stringify({
               bookingId: context.testBookingId,
               amount: price,
-              currency: 'usd'
+              currency: "dkk"'
             })
           })
           

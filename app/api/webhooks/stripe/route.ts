@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createServerSideClient } from '@/lib/supabase-server';
+import { PaymentStatusMapper } from '@/lib/payment-status-mapper';
 import Stripe from 'stripe';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.text();
+    const buffer = Buffer.from(await request.arrayBuffer());
     const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = stripe.webhooks.constructEvent(buffer, signature, webhookSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
       return NextResponse.json(
@@ -50,14 +51,16 @@ export async function POST(request: NextRequest) {
           bookingId = paymentIntent.metadata.bookingId;
 
           if (bookingId) {
+            // Map Stripe status to business status
+            const businessStatus = PaymentStatusMapper.getBusinessStatusFromPaymentIntent(paymentIntent);
+
             const { error } = await supabase
               .from('bookings')
               .update({
-                payment_status: 'authorized',
+                payment_status: businessStatus,
                 updated_at: new Date().toISOString(),
               })
-              .eq('stripe_payment_intent_id', paymentIntent.id)
-              .eq('payment_status', 'processing'); // Only update if currently processing
+              .eq('stripe_payment_intent_id', paymentIntent.id);
 
             if (error) {
               processingError = `Failed to update booking status: ${error.message}`;
@@ -120,8 +123,21 @@ export async function POST(request: NextRequest) {
           bookingId = paymentIntent.metadata.bookingId;
 
           if (bookingId) {
-            // Log for monitoring - payment requires additional customer action
-            console.log(`Payment intent ${paymentIntent.id} requires action for booking ${bookingId}`);
+            // Update booking status to requires_action
+            const businessStatus = PaymentStatusMapper.mapStripeStatus('requires_action');
+            
+            const { error } = await supabase
+              .from('bookings')
+              .update({
+                payment_status: businessStatus,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('stripe_payment_intent_id', paymentIntent.id);
+
+            if (error) {
+              processingError = `Failed to update requires_action status: ${error.message}`;
+              console.error(processingError);
+            }
           }
           break;
         }
@@ -162,12 +178,12 @@ export async function POST(request: NextRequest) {
             if (booking) {
               bookingId = booking.id;
               
-              // Only update to captured if currently authorized
+              // Only update to completed if currently authorized
               if (booking.payment_status === 'authorized') {
                 const { error } = await supabase
                   .from('bookings')
                   .update({
-                    payment_status: 'captured',
+                    payment_status: 'completed', // Use business-friendly status
                     amount_captured: charge.amount, // Store in cents
                     updated_at: new Date().toISOString(),
                   })

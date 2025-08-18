@@ -119,7 +119,7 @@ async function createTestExpertWithAuth() {
       topic_tags: ['Testing', 'E2E', 'API'],
       duration_minutes: 60,
       price_amount: 5000,
-      currency: 'USD',
+      currency: 'DKK',
       level: 'INTERMEDIATE',
       is_active: true
     })
@@ -280,7 +280,7 @@ async function runComprehensiveE2ETests() {
         end_at: slotEnd.toISOString(),
         status: 'confirmed',
         amount: 50.00,
-        currency: 'USD',
+        currency: 'DKK',
         notes: 'E2E test booking'
       })
       .select()
@@ -338,7 +338,7 @@ async function runComprehensiveE2ETests() {
         body: JSON.stringify({
           bookingId: createdBookingId,
           amount: 5000,
-          currency: 'usd'
+          currency: 'dkk'
         })
       },
       testExpert.token

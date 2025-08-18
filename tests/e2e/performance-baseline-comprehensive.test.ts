@@ -258,7 +258,7 @@ describe('Comprehensive Performance Baseline Tests', () => {
         const response = await makeRequest('POST', endpoint, {
           bookingId: testBookingIds[i],
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
         
         const endTime = performance.now()
@@ -764,7 +764,7 @@ describe('Comprehensive Performance Baseline Tests', () => {
         const response = await makeRequest('POST', '/api/payment/create-intent', {
           bookingId: testBookingIds[i],
           amount: 50.00,
-          currency: 'usd'
+          currency: "dkk"'
         })
         
         const endTime = performance.now()

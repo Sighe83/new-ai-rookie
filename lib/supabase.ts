@@ -95,18 +95,25 @@ export type Booking = {
   expert_id: string
   session_id: string
   slot_id: string
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
+  status: 'pending' | 'pending_approval' | 'confirmed' | 'declined' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
   start_at: string
   end_at: string
-  payment_status: 'pending' | 'authorized' | 'captured' | 'failed' | 'cancelled' | 'refunded'
+  payment_status: 'pending' | 'processing' | 'requires_action' | 'authorized' | 'completed' | 'failed' | 'cancelled' | 'refunded'
   amount_authorized: number // Amount in cents
+  amount_captured?: number
+  amount_refunded?: number
   currency: 'DKK' | 'USD' | 'EUR'
   stripe_payment_intent_id?: string
   learner_notes?: string
   expert_notes?: string
   cancellation_reason?: string
+  cancellation_fee?: number
   cancelled_by?: 'learner' | 'expert' | 'system'
   cancelled_at?: string
+  approved_at?: string
+  declined_at?: string
+  declined_reason?: string
+  auto_declined_at?: string
   created_at: string
   updated_at: string
 }

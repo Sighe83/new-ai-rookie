@@ -26,7 +26,7 @@ const VALID_BOOKING_DATA = {
   end_at: '2025-08-18T11:00:00Z',
   availability_window_id: 'test-window-id',
   amount: 50.00,
-  currency: 'USD',
+  currency: 'DKK',
   notes: 'Test booking for validation'
 }
 
@@ -158,7 +158,7 @@ async function testPaymentValidation() {
     body: JSON.stringify({
       bookingId: 'test-booking-id',
       amount: 50.00,
-      currency: 'usd'
+      currency: 'dkk'
     })
   })
   
@@ -170,7 +170,7 @@ async function testPaymentValidation() {
   const missingFieldsPaymentResult = await makeRequest('/api/payment/create-intent', {
     headers: { 'Authorization': `Bearer ${MOCK_AUTH_TOKEN}` },
     body: JSON.stringify({
-      currency: 'usd'
+      currency: 'dkk'
       // Missing bookingId and amount
     })
   })
@@ -186,7 +186,7 @@ async function testPaymentValidation() {
     body: JSON.stringify({
       bookingId: 'non-existent-booking-id',
       amount: 50.00,
-      currency: 'usd'
+      currency: 'dkk'
     })
   })
   

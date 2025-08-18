@@ -641,7 +641,7 @@ describe('Complete Booking Flow End-to-End Tests', () => {
       body: JSON.stringify({
         bookingId,
         amount,
-        currency: 'usd'
+        currency: "dkk"'
       })
     })
   }
