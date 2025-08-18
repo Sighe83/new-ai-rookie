@@ -77,17 +77,30 @@ export async function GET(
       id: slot.id,
       start_at: slot.start_time,
       end_at: slot.end_time,
-      is_available: slot.is_available && slot.current_bookings < slot.max_bookings,
+      is_available: slot.is_available, // Trust the database flag - it's updated atomically
       availability_window_id: slot.availability_window_id,
       session_duration_minutes: session.duration_minutes,
-      bookings_remaining: slot.max_bookings - slot.current_bookings,
+      bookings_remaining: Math.max(0, slot.max_bookings - slot.current_bookings),
     }))
+
+    // Deduplicate slots by time (prefer available slots, then first slot)
+    const slotsByTime = new Map()
+    formattedSlots.forEach(slot => {
+      const timeKey = `${slot.start_at}_${slot.end_at}`
+      const existing = slotsByTime.get(timeKey)
+      
+      if (!existing || (slot.is_available && !existing.is_available)) {
+        slotsByTime.set(timeKey, slot)
+      }
+    })
+    
+    const deduplicatedSlots = Array.from(slotsByTime.values())
 
     // Apply business rules filtering
     const now = new Date()
     const minStartTime = new Date(now.getTime() + 2 * 60 * 60 * 1000) // 2 hours minimum lead time
     
-    const availableSlots = formattedSlots.filter(slot => {
+    const availableSlots = deduplicatedSlots.filter(slot => {
       const slotStart = new Date(slot.start_at)
       return slotStart > minStartTime // Only show slots that meet minimum lead time
     })
