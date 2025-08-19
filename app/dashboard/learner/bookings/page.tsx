@@ -164,7 +164,10 @@ export default function LearnerBookingsPage() {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          reason: 'User requested cancellation'
+        })
       })
 
       if (!response.ok) {

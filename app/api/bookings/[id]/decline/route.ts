@@ -4,7 +4,7 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createServerSideClient();
@@ -15,7 +15,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const bookingId = params.id;
+    const resolvedParams = await params;
+    const bookingId = resolvedParams.id;
     const body = await request.json();
     const { notes, reason } = body;
 
@@ -88,7 +89,7 @@ export async function POST(
     let paymentCancelled = false;
     let cancelError = null;
 
-    if (declineResult.stripe_payment_intent_id && declineResult.amount_to_refund > 0) {
+    if (declineResult.stripe_payment_intent_id) {
       try {
         const paymentIntent = await stripe.paymentIntents.cancel(
           declineResult.stripe_payment_intent_id
@@ -96,11 +97,11 @@ export async function POST(
 
         paymentCancelled = true;
 
-        // Update payment status to refunded after successful cancellation
+        // Update payment status to cancelled after successful cancellation
         const { error: paymentUpdateError } = await supabase
           .from('bookings')
           .update({ 
-            payment_status: 'refunded',
+            payment_status: 'cancelled',
             updated_at: new Date().toISOString()
           })
           .eq('id', bookingId);
@@ -112,16 +113,16 @@ export async function POST(
         // Add audit log for payment cancellation
         await supabase.from('booking_audit_log').insert({
           booking_id: bookingId,
-          event_type: 'payment_refunded',
+          event_type: 'payment_cancelled',
           actor_user_id: user.id,
           actor_type: 'expert',
-          old_payment_status: 'authorized',
-          new_payment_status: 'refunded',
+          old_payment_status: declineResult.payment_status,
+          new_payment_status: 'cancelled',
           metadata: {
             stripe_payment_intent_id: paymentIntent.id,
-            amount_refunded: declineResult.amount_to_refund,
-            refunded_at: new Date().toISOString(),
-            refund_reason: reason || 'Expert declined booking'
+            amount_cancelled: paymentIntent.amount,
+            cancelled_at: new Date().toISOString(),
+            cancellation_reason: reason || 'Expert declined booking'
           }
         });
 
@@ -150,13 +151,13 @@ export async function POST(
       booking: {
         id: bookingId,
         status: declineResult.booking_status,
-        payment_status: paymentCancelled ? 'refunded' : declineResult.payment_status,
+        payment_status: paymentCancelled ? 'cancelled' : declineResult.payment_status,
         declined_at: new Date().toISOString(),
         decline_reason: reason || 'Expert declined booking'
       },
       payment: {
         cancelled: paymentCancelled,
-        amount: declineResult.amount_to_refund,
+        amount: declineResult.amount_to_refund || 0,
         currency: declineResult.currency,
         error: cancelError
       }

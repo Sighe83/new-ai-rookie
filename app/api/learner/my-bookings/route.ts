@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           topic_tags,
           level
         ),
-        expert_profiles(
+        expert_profiles!bookings_expert_id_fkey(
           id,
           bio,
           rating,

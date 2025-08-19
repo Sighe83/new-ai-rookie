@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50); // Max 50 items
     const offset = parseInt(searchParams.get('offset') || '0');
-    const status = searchParams.get('status') || 'pending_approval';
+    const status = searchParams.get('status') || 'pending';
 
     // Get pending approvals with learner and session details
     const { data: pendingApprovals, error: approvalsError } = await supabase
@@ -53,9 +53,7 @@ export async function GET(request: NextRequest) {
         currency,
         learner_notes,
         expert_notes,
-        
-        -- Session details
-        sessions!inner(
+        sessions:session_id(
           id,
           title,
           description,
@@ -64,11 +62,9 @@ export async function GET(request: NextRequest) {
           topic_tags,
           level
         ),
-        
-        -- Learner details
-        learner_profiles!inner(
+        learner_profiles:learner_id(
           id,
-          user_profiles!inner(
+          user_profiles:user_profile_id(
             id,
             display_name,
             avatar_url
@@ -124,14 +120,14 @@ export async function GET(request: NextRequest) {
         description: booking.sessions?.description,
         duration_minutes: booking.sessions?.duration_minutes,
         price_cents: booking.sessions?.price_cents,
-        topic_tags: booking.sessions?.topic_tags,
+        topic_tags: booking.sessions?.topic_tags || [],
         level: booking.sessions?.level
       },
       
       // Learner information  
       learner: {
         id: booking.learner_profiles?.id,
-        display_name: booking.learner_profiles?.user_profiles?.display_name,
+        display_name: booking.learner_profiles?.user_profiles?.display_name || 'Unknown Learner',
         avatar_url: booking.learner_profiles?.user_profiles?.avatar_url
       },
       
